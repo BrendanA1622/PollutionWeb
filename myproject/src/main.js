@@ -59,8 +59,8 @@ scene.add(blankOxygen2)
 
 
 
-const pointLight = new THREE.PointLight(0xffffff,10)
-pointLight.position.set(6,6,6)
+const centerPoint = new THREE.PointLight(0xffffff,10)
+centerPoint.position.set(0,0,0)
 // scene.add(pointLight)
 
 renderer.outputEncoding = THREE.sRGBEncoding;
@@ -69,7 +69,7 @@ const ambientLight = new THREE.AmbientLight(0xffffff, 1);
 
 
 
-const lightHelper = new THREE.PointLightHelper(pointLight)
+const lightHelper = new THREE.PointLightHelper(centerPoint)
 const gridHelper = new THREE.GridHelper(200, 50);
 scene.add(lightHelper, gridHelper)
 
@@ -130,6 +130,7 @@ const fadeEnd = 60;   // Fully transparent at 300 pixels of scroll
 const oxygenAtomSize = .00000000012; // 1.2 angstroms (meters)
 
 const direction = new THREE.Vector3();
+const direction2 = new THREE.Vector3();
 
 const rotationElement = document.getElementById('camera-rotation');
 
@@ -180,11 +181,26 @@ function animate() {
 
 
 
-    const scrollY = camera.position.distanceTo(oxygen.position);
+    const scrollY = camera.position.distanceTo(centerPoint.position);
 
+    let targetOxy, targetOxy2;
+    if (scrollY < 30) {
+      oxygen2.position.set(Math.max(7.5, Math.pow(Math.abs(30 - scrollY),2)),0,0);
+      blankOxygen2.position.set(Math.max(7.5, Math.pow(Math.abs(30 - scrollY),2)),0,0);
+      if (Math.pow(Math.abs(30 - scrollY),2) < 7.5) {
+        targetOxy = -7.5;
+        // targetOxy2 = 7.5;
+      } else {
+        targetOxy = 0.0;
+      }
+      oxygen.position.x += (targetOxy - oxygen.position.x) * 0.1;
+      blankOxygen.position.x = oxygen.position.x;
+    }
 
-    oxygen2.position.set(Math.max(15, Math.pow(Math.abs(30 - scrollY),2)),0,0);
-    blankOxygen2.position.set(Math.max(15, Math.pow(Math.abs(30 - scrollY),2)),0,0);
+    // oxygen2.position.x += (targetOxy2 - oxygen2.position.x) * 0.1;
+    // blankOxygen2.position.x = oxygen2.position.x;
+
+    
 
 
 
@@ -210,32 +226,32 @@ function animate() {
     if (deltaYRot < -Math.PI) deltaYRot += 2 * Math.PI;
     oxygen.rotation.y += 0.15 * deltaYRot;
 
-    // direction2.subVectors(camera.position, oxygen2.position);
-    // direction2.normalize();
-    // const angle2 = Math.atan2(direction2.z, direction2.x);
-    // var targetYRot2 = -angle2;
-    // var targetZRot2 = direction2.y;
-    // let deltaYRot2 = targetYRot2 - oxygen2.rotation.y;
-    // if (deltaYRot2 > Math.PI) deltaYRot2 -= 2 * Math.PI;
-    // if (deltaYRot2 < -Math.PI) deltaYRot2 += 2 * Math.PI;
-    // oxygen2.rotation.y += 0.15 * deltaYRot2;
+    direction2.subVectors(camera.position, oxygen2.position);
+    direction2.normalize();
+    const angle2 = Math.atan2(direction2.z, direction2.x);
+    var targetYRot2 = -angle2;
+    var targetZRot2 = direction2.y;
+    let deltaYRot2 = targetYRot2 - oxygen2.rotation.y;
+    if (deltaYRot2 > Math.PI) deltaYRot2 -= 2 * Math.PI;
+    if (deltaYRot2 < -Math.PI) deltaYRot2 += 2 * Math.PI;
+    oxygen2.rotation.y += 0.15 * deltaYRot2;
 
     let deltaZRot = targetZRot - oxygen.rotation.z;
     if (deltaZRot > Math.PI) deltaZRot -= 2 * Math.PI;
     if (deltaZRot < -Math.PI) deltaZRot += 2 * Math.PI;
     oxygen.rotation.z += 0.15 * deltaZRot;
 
-    // let deltaZRot2 = targetZRot2 - oxygen2.rotation.z;
-    // if (deltaZRot2 > Math.PI) deltaZRot2 -= 2 * Math.PI;
-    // if (deltaZRot2 < -Math.PI) deltaZRot2 += 2 * Math.PI;
-    // oxygen2.rotation.z += 0.15 * deltaZRot2;
+    let deltaZRot2 = targetZRot2 - oxygen2.rotation.z;
+    if (deltaZRot2 > Math.PI) deltaZRot2 -= 2 * Math.PI;
+    if (deltaZRot2 < -Math.PI) deltaZRot2 += 2 * Math.PI;
+    oxygen2.rotation.z += 0.15 * deltaZRot2;
 
     oxygen.rotation.x = 0.0;
     oxygen2.rotation.x = 0.0;
 
 
 
-    const distance = camera.position.distanceTo(oxygen.position);
+    const distance = camera.position.distanceTo(centerPoint.position);
     // Assume 1 unit in the scene = 1 meter in real life
     const scale = distance * oxygenAtomSize * 0.1 * 1.25;
     // Format the scale as a human-readable string
