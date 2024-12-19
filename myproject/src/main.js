@@ -22,24 +22,21 @@ camera.position.setZ(10);
 renderer.render( scene, camera );
 
 
-
+////////////// MAKING O ATOMS
 const geometry = new THREE.SphereGeometry(6,64,64)
 const oxyMat = new THREE.MeshBasicMaterial( {
   map: new THREE.TextureLoader().load('./images/OxygenAtom7.png'),
-  // map: new THREE.TextureLoader().load('./images/deep-ocean.jpg'),
   color: 0xFFFFFF
 });
 oxyMat.toneMapped = false;
 const oxygen = new THREE.Mesh( geometry, oxyMat );
 oxygen.position.set(0,0,0);
 scene.add(oxygen)
-
 const oxygen2 = new THREE.Mesh( geometry, oxyMat );
 oxygen2.position.set(100,0,0);
 scene.add(oxygen2)
 
-
-
+////////////// MAKING BLANK O
 const blankGeometry = new THREE.SphereGeometry(5.99,64,64)
 const blankOxyMat = new THREE.MeshBasicMaterial( {
   color: 0xff4747
@@ -48,13 +45,22 @@ blankOxyMat.toneMapped = false;
 const blankOxygen = new THREE.Mesh( blankGeometry, blankOxyMat );
 blankOxygen.position.set(0,0,0);
 scene.add(blankOxygen)
-
-
-
 const blankOxygen2 = new THREE.Mesh( blankGeometry, blankOxyMat );
 blankOxygen2.position.set(100,0,0);  
 scene.add(blankOxygen2)
 
+/////////////// BONDS FORMED
+const bondGeometry = new THREE.CylinderGeometry(1.0,1.0,6.0,12,12)
+const bondMat = new THREE.MeshBasicMaterial( {
+  color:0xFFFFFF
+});
+const sigmaBond = new THREE.Mesh( bondGeometry, bondMat );
+sigmaBond.rotateZ(Math.PI/2.0);
+sigmaBond.position.y = 1.7;
+const piBond = new THREE.Mesh( bondGeometry, bondMat );
+piBond.rotateZ(Math.PI/2.0);
+piBond.position.y = -1.7;
+scene.add(sigmaBond, piBond)
 
 
 
@@ -95,19 +101,25 @@ window.addEventListener('resize', () => {
 
 
 
-
+const stars = [];
+const explodeAzimuth = [];
+const explodePolar = [];
 function addStar() {
-  const geometry = new THREE.SphereGeometry(0.2, 24, 24);
-  const material = new THREE.MeshStandardMaterial( { color: 0xffffff })
-  const star = new THREE.Mesh( geometry, material );
+  const geometryS = new THREE.SphereGeometry(0.3, 12, 12);
+  const materialS = new THREE.MeshBasicMaterial( { color: 0xfff671, opacity: 1.0, transparent: true });
+  // const material = new THREE.MeshStandardMaterial( { color: 0xFFFFFF });
+  const star = new THREE.Mesh( geometryS, materialS );
 
   const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread( 300 ) );
 
-  star.position.set(x, y, z);
+  star.position.set(0, 0, 0);
+  explodeAzimuth.push(Math.random() * (Math.PI * 2));
+  explodePolar.push(Math.random() * (Math.PI * 2));
+  stars.push(star);
   scene.add(star)
 }
 
-Array(500).fill().forEach(addStar)
+Array(200).fill().forEach(addStar)
 
 const newfoundTexture = new THREE.TextureLoader().load('./images/deep-ocean.jpg');
 scene.background = newfoundTexture;
@@ -159,14 +171,47 @@ function onScroll(event) {
 }
 
 
+function createVectorFromAngles(theta, phi, radius = 1) {
+  // Convert spherical coordinates to Cartesian coordinates
+  const x = radius * Math.sin(phi) * Math.cos(theta);
+  const y = radius * Math.sin(phi) * Math.sin(theta);
+  const z = radius * Math.cos(phi);
+
+  // Create and return the Vector3
+  return new THREE.Vector3(x, y, z);
+}
+
+
+
+
 
 
 
 /////////////////////////////////////////// ANIMATE
 function animate() {
     requestAnimationFrame( animate );
-
+    const scrollY = camera.position.distanceTo(centerPoint.position);
     currentTargetY += (scrollTargetY - currentTargetY) * 0.1;
+
+    ////////// MOVING BOND ENERGY PARTICLES  ////////////////
+    if ( scrollY > 27.1 && scrollY < 45.0) {
+      var i = 0;
+      stars.forEach((star) => {
+        star.material.opacity = (45.0 - scrollY) / (45.0 - 27.1);
+        // var explodeAzimuth = (i * 2.0 * Math.PI) / 50.0;
+        // var explodePolar = (Math.random() - 0.5) * (Math.PI / 4);
+        const explodeVector = createVectorFromAngles(explodePolar[i], explodeAzimuth[i]);
+        // const explodeVector = createVectorFromAngles(0.0, 0.0);
+        star.position.x = explodeVector.x * (scrollY - 27.1) * 10.0;
+        star.position.y = explodeVector.y * (scrollY - 27.1) * 10.0;
+        star.position.z = explodeVector.z * (scrollY - 27.1) * 10.0;
+        // star.position.addScaledVector(explodeVector, 1.0);
+
+        i += 1;
+      });
+    }
+
+    
 
     // camera.position.x += (scrollTargetY - currentTargetY) * 0.1;
     // camera.position.y += (scrollTargetY - currentTargetY) * 0.1;
@@ -181,7 +226,7 @@ function animate() {
 
 
 
-    const scrollY = camera.position.distanceTo(centerPoint.position);
+    
 
     let targetOxy, targetOxy2;
     if (scrollY < 30) {
@@ -193,6 +238,10 @@ function animate() {
       } else {
         targetOxy = 0.0;
       }
+      oxygen.position.x += (targetOxy - oxygen.position.x) * 0.1;
+      blankOxygen.position.x = oxygen.position.x;
+    } else {
+      targetOxy = -7.5;
       oxygen.position.x += (targetOxy - oxygen.position.x) * 0.1;
       blankOxygen.position.x = oxygen.position.x;
     }
@@ -268,7 +317,8 @@ function animate() {
 
 
 
-    rotationElement.innerText = `Screen height: ${scaleLabel}`;
+    // rotationElement.innerText = `Screen height: ${scaleLabel}`;
+    rotationElement.innerText = `ScrollY: ${scrollY.toFixed(2)}`;
 
 
     controls.update();
