@@ -1,24 +1,15 @@
 import './style.css'
 import * as THREE  from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 const scene = new THREE.Scene();
-
-
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-
 camera.position.set(0,0,0);
-
-
-//testing changes
-const renderer = new THREE.WebGLRenderer({
-    canvas: document.querySelector('#bg'),
-});
-
+const renderer = new THREE.WebGLRenderer({canvas: document.querySelector('#bg'),});
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize( window.innerWidth, window.innerHeight );
 camera.position.setZ(10);
-
 renderer.render( scene, camera );
 
 
@@ -52,7 +43,7 @@ scene.add(blankOxygen2)
 /////////////// BONDS FORMED
 const bondGeometry = new THREE.CylinderGeometry(1.0,1.0,6.0,12,12)
 const bondMat = new THREE.MeshBasicMaterial( {
-  color:0xFFFFFF
+  color: 0xff4747
 });
 const sigmaBond = new THREE.Mesh( bondGeometry, bondMat );
 sigmaBond.rotateZ(Math.PI/2.0);
@@ -62,6 +53,27 @@ piBond.rotateZ(Math.PI/2.0);
 piBond.position.y = -1.7;
 scene.add(sigmaBond, piBond)
 
+/////////////// Displaying O2 Molecule Panel
+const o2texture = new THREE.TextureLoader().load('./images/OxygenMoleculeDescriptor.png');
+const o2geometry = new THREE.PlaneGeometry(24, 18); // Adjust size as needed
+const o2material = new THREE.MeshBasicMaterial({ map: o2texture, transparent: true, opacity: 0.0 });
+const o2panel = new THREE.Mesh(o2geometry, o2material);
+o2panel.position.y = 10.0;
+scene.add(o2panel);
+
+
+////////////////////////// WATER 3D MODEL /////////////////////////
+const loader = new GLTFLoader();
+
+loader.load('./blenderModels/water3.glb', (gltf) => {
+  const model = gltf.scene;
+  scene.add(model);
+  model.position.set(0, 0, 0);
+  model.scale.set(6.0, 6.0, 6.0);
+}, undefined, (error) => {
+    console.error('Error loading the model:', error);
+});
+
 
 
 
@@ -70,8 +82,8 @@ centerPoint.position.set(0,0,0)
 // scene.add(pointLight)
 
 renderer.outputEncoding = THREE.sRGBEncoding;
-const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-// scene.add(ambientLight)
+const ambientLight = new THREE.AmbientLight(0xffffff, 4.9);
+scene.add(ambientLight)
 
 
 
@@ -83,9 +95,9 @@ scene.add(lightHelper, gridHelper)
 
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.zoomSpeed = 0.3;
 controls.minDistance = 15;
 controls.enableZoom = false;
+// controls.zoomSpeed = 0.3;
 // controls.enableRotate = false;
 controls.enablePan = false;
 
@@ -133,8 +145,8 @@ scene.background = newfoundTexture;
 oxygen.material.transparent = true; // Enable transparency
 
 // Set a scroll threshold for fading
-const fadeStart = 30; // Start fading at 100 pixels of scroll
-const fadeEnd = 60;   // Fully transparent at 300 pixels of scroll
+const fadeStart = 28; // Start fading at 100 pixels of scroll
+const fadeEnd = 35;   // Fully transparent at 300 pixels of scroll
 
 
 
@@ -193,6 +205,8 @@ function animate() {
     const scrollY = camera.position.distanceTo(centerPoint.position);
     currentTargetY += (scrollTargetY - currentTargetY) * 0.1;
 
+    o2panel.lookAt(camera.position);
+
     ////////// MOVING BOND ENERGY PARTICLES  ////////////////
     if ( scrollY > 27.1 && scrollY < 45.0) {
       var i = 0;
@@ -221,7 +235,7 @@ function animate() {
     camera.getWorldDirection(zoom_direction);
 
     // Update the camera position to move along its facing direction
-    camera.position.addScaledVector(zoom_direction, (-scrollTargetY + currentTargetY) * 0.1);
+    camera.position.addScaledVector(zoom_direction, (-scrollTargetY + currentTargetY) * 0.1 * (Math.log(scrollY + 1.0) - 2.0));
 
 
 
@@ -261,6 +275,7 @@ function animate() {
     // Apply opacity based on fade factor
     oxygen.material.opacity = 1 - fadeFactor;
     oxygen2.material.opacity = 1 - fadeFactor;
+    o2panel.material.opacity = fadeFactor;
 
 
 
@@ -302,7 +317,7 @@ function animate() {
 
     const distance = camera.position.distanceTo(centerPoint.position);
     // Assume 1 unit in the scene = 1 meter in real life
-    const scale = distance * oxygenAtomSize * 0.1 * 1.25;
+    const scale = distance * oxygenAtomSize * 0.125;
     // Format the scale as a human-readable string
     let scaleLabel;
     if (scale < 1e-9) {
@@ -316,9 +331,10 @@ function animate() {
     }
 
 
+    // scale = 10.0 * Math.log(scrollY + 1.0);
 
     // rotationElement.innerText = `Screen height: ${scaleLabel}`;
-    rotationElement.innerText = `ScrollY: ${scrollY.toFixed(2)}`;
+    rotationElement.innerText = `ScrollY: ${Math.log(scrollY + 1.0).toFixed(2)}`;
 
 
     controls.update();
