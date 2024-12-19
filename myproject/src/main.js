@@ -24,19 +24,36 @@ renderer.render( scene, camera );
 
 
 const geometry = new THREE.SphereGeometry(6,64,64)
-
 const oxyMat = new THREE.MeshBasicMaterial( {
   map: new THREE.TextureLoader().load('./images/OxygenAtom7.png'),
   // map: new THREE.TextureLoader().load('./images/deep-ocean.jpg'),
   color: 0xFFFFFF
 });
-
 oxyMat.toneMapped = false;
-
 const oxygen = new THREE.Mesh( geometry, oxyMat );
 oxygen.position.set(0,0,0);
 scene.add(oxygen)
 
+const oxygen2 = new THREE.Mesh( geometry, oxyMat );
+oxygen2.position.set(100,0,0);
+scene.add(oxygen2)
+
+
+
+const blankGeometry = new THREE.SphereGeometry(5.99,64,64)
+const blankOxyMat = new THREE.MeshBasicMaterial( {
+  color: 0xff4747
+});
+blankOxyMat.toneMapped = false;
+const blankOxygen = new THREE.Mesh( blankGeometry, blankOxyMat );
+blankOxygen.position.set(0,0,0);
+scene.add(blankOxygen)
+
+
+
+const blankOxygen2 = new THREE.Mesh( blankGeometry, blankOxyMat );
+blankOxygen2.position.set(100,0,0);  
+scene.add(blankOxygen2)
 
 
 
@@ -95,23 +112,6 @@ Array(500).fill().forEach(addStar)
 const newfoundTexture = new THREE.TextureLoader().load('./images/deep-ocean.jpg');
 scene.background = newfoundTexture;
 
-
-
-
-const blankGeometry = new THREE.SphereGeometry(5.99,64,64)
-const blankOxyMat = new THREE.MeshBasicMaterial( {
-  color: 0xff4747
-});
-blankOxyMat.toneMapped = false;
-const blankOxygen = new THREE.Mesh( blankGeometry, blankOxyMat );
-blankOxygen.position.set(0,0,0);
-scene.add(blankOxygen)
-
-
-
-const blankOxygen2 = new THREE.Mesh( blankGeometry, blankOxyMat );
-blankOxygen2.position.set(100,0,0);  
-scene.add(blankOxygen2)
 
 
 
@@ -183,6 +183,7 @@ function animate() {
     const scrollY = camera.position.distanceTo(oxygen.position);
 
 
+    oxygen2.position.set(Math.max(15, Math.pow(Math.abs(30 - scrollY),2)),0,0);
     blankOxygen2.position.set(Math.max(15, Math.pow(Math.abs(30 - scrollY),2)),0,0);
 
 
@@ -194,6 +195,7 @@ function animate() {
     fadeFactor = Math.min(Math.max(fadeFactor, 0), 1); // Clamp between 0 and 1
     // Apply opacity based on fade factor
     oxygen.material.opacity = 1 - fadeFactor;
+    oxygen2.material.opacity = 1 - fadeFactor;
 
 
 
@@ -207,11 +209,29 @@ function animate() {
     if (deltaYRot > Math.PI) deltaYRot -= 2 * Math.PI;
     if (deltaYRot < -Math.PI) deltaYRot += 2 * Math.PI;
     oxygen.rotation.y += 0.15 * deltaYRot;
+
+    // direction2.subVectors(camera.position, oxygen2.position);
+    // direction2.normalize();
+    // const angle2 = Math.atan2(direction2.z, direction2.x);
+    // var targetYRot2 = -angle2;
+    // var targetZRot2 = direction2.y;
+    // let deltaYRot2 = targetYRot2 - oxygen2.rotation.y;
+    // if (deltaYRot2 > Math.PI) deltaYRot2 -= 2 * Math.PI;
+    // if (deltaYRot2 < -Math.PI) deltaYRot2 += 2 * Math.PI;
+    // oxygen2.rotation.y += 0.15 * deltaYRot2;
+
     let deltaZRot = targetZRot - oxygen.rotation.z;
     if (deltaZRot > Math.PI) deltaZRot -= 2 * Math.PI;
     if (deltaZRot < -Math.PI) deltaZRot += 2 * Math.PI;
     oxygen.rotation.z += 0.15 * deltaZRot;
+
+    // let deltaZRot2 = targetZRot2 - oxygen2.rotation.z;
+    // if (deltaZRot2 > Math.PI) deltaZRot2 -= 2 * Math.PI;
+    // if (deltaZRot2 < -Math.PI) deltaZRot2 += 2 * Math.PI;
+    // oxygen2.rotation.z += 0.15 * deltaZRot2;
+
     oxygen.rotation.x = 0.0;
+    oxygen2.rotation.x = 0.0;
 
 
 
