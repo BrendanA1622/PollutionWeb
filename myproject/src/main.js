@@ -1,8 +1,13 @@
 import './style.css'
 import * as THREE  from 'three';
+import seedrandom from 'seedrandom';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
+const seed = 'cool-seed';
+const rng = seedrandom(seed);
+Math.random = rng;
+console.log(Math.random());
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 camera.position.set(0,0,0);
@@ -55,7 +60,7 @@ scene.add(sigmaBond, piBond)
 
 /////////////// Displaying O2 Molecule Panel
 const o2texture = new THREE.TextureLoader().load('./images/OxygenMoleculeDescriptor.png');
-const o2geometry = new THREE.PlaneGeometry(24, 18); // Adjust size as needed
+const o2geometry = new THREE.PlaneGeometry(28, 21); // Adjust size as needed
 const o2material = new THREE.MeshBasicMaterial({ map: o2texture, transparent: true, opacity: 0.0 });
 const o2panel = new THREE.Mesh(o2geometry, o2material);
 o2panel.position.y = 10.0;
@@ -65,14 +70,57 @@ scene.add(o2panel);
 ////////////////////////// WATER 3D MODEL /////////////////////////
 const loader = new GLTFLoader();
 
-loader.load('./blenderModels/water3.glb', (gltf) => {
-  const model = gltf.scene;
+const h2o1Pos = new THREE.Object3D();
+h2o1Pos.position.set(-100, 30, -60);
+h2o1Pos.rotation.set(Math.random() * (Math.PI * 2), Math.random() * (Math.PI * 2), Math.random() * (Math.PI * 2));
+let model;
+loader.load('./blenderModels/water3.glb', (gltf) => { 
+  model = gltf.scene;
   scene.add(model);
-  model.position.set(0, 0, 0);
-  model.scale.set(6.0, 6.0, 6.0);
+  model.position.set(h2o1Pos.position.x, h2o1Pos.position.y, h2o1Pos.position.z);
+  model.rotation.set(h2o1Pos.rotation.x, h2o1Pos.rotation.y, h2o1Pos.rotation.z);
+  model.scale.set(5.9, 5.9, 5.9);
 }, undefined, (error) => {
     console.error('Error loading the model:', error);
 });
+
+/////////////// Displaying H2O Molecule Panel
+const h2otexture = new THREE.TextureLoader().load('./images/H2OMoleculeDescriptor.png');
+const h2ogeometry = new THREE.PlaneGeometry(32, 24); // Adjust size as needed
+const h2omaterial = new THREE.MeshBasicMaterial({ map: h2otexture, transparent: true, opacity: 0.0 });
+const h2opanel = new THREE.Mesh(h2ogeometry, h2omaterial);
+h2opanel.position.y = h2o1Pos.position.y + 12.0;
+h2opanel.position.x = h2o1Pos.position.x;
+h2opanel.position.z = h2o1Pos.position.z;
+scene.add(h2opanel);
+
+
+
+
+////////////////////////// CO2 3D MODEL /////////////////////////
+const cd1Pos = new THREE.Object3D();
+cd1Pos.position.set(100, -60, -20);
+cd1Pos.rotation.set(Math.random() * (Math.PI * 2), Math.random() * (Math.PI * 2), Math.random() * (Math.PI * 2));
+let model1;
+loader.load('./blenderModels/carbonDioxide.glb', (gltf) => { 
+  model1 = gltf.scene;
+  scene.add(model1);
+  model1.position.set(cd1Pos.position.x, cd1Pos.position.y, cd1Pos.position.z);
+  model1.rotation.set(cd1Pos.rotation.x, cd1Pos.rotation.y, cd1Pos.rotation.z);
+  model1.scale.set(5.9, 5.9, 5.9);
+}, undefined, (error) => {
+    console.error('Error loading the model:', error);
+});
+
+/////////////// Displaying CO2 Molecule Panel
+const co2texture = new THREE.TextureLoader().load('./images/CO2MoleculeDescriptor.png');
+const co2geometry = new THREE.PlaneGeometry(40, 30); // Adjust size as needed
+const co2material = new THREE.MeshBasicMaterial({ map: co2texture, transparent: true, opacity: 0.0 });
+const co2panel = new THREE.Mesh(co2geometry, co2material);
+co2panel.position.y = cd1Pos.position.y + 12.0;
+co2panel.position.x = cd1Pos.position.x;
+co2panel.position.z = cd1Pos.position.z;
+scene.add(co2panel);
 
 
 
@@ -147,6 +195,7 @@ oxygen.material.transparent = true; // Enable transparency
 // Set a scroll threshold for fading
 const fadeStart = 28; // Start fading at 100 pixels of scroll
 const fadeEnd = 35;   // Fully transparent at 300 pixels of scroll
+const startOutFade = 100;
 
 
 
@@ -196,14 +245,42 @@ function createVectorFromAngles(theta, phi, radius = 1) {
 
 
 
-
-
-
 /////////////////////////////////////////// ANIMATE
 function animate() {
     requestAnimationFrame( animate );
     const scrollY = camera.position.distanceTo(centerPoint.position);
     currentTargetY += (scrollTargetY - currentTargetY) * 0.1;
+
+
+
+    h2o1Pos.position.set(-80.0 + scrollY * (1.1), 40.0 - scrollY * (1.1), -40.0 + scrollY * (0.3));
+    h2o1Pos.rotation.set(-80.0 + scrollY * 0.2, 10.0, -10.0);
+    model.position.set(h2o1Pos.position.x, h2o1Pos.position.y, h2o1Pos.position.z);
+    model.rotation.set(h2o1Pos.rotation.x, h2o1Pos.rotation.y, h2o1Pos.rotation.z);
+
+    h2opanel.position.y = h2o1Pos.position.y + 12.0;
+    h2opanel.position.x = h2o1Pos.position.x;
+    h2opanel.position.z = h2o1Pos.position.z;
+    h2opanel.lookAt(camera.position);
+
+
+
+    cd1Pos.position.set(150.0 + scrollY * (-1.1), -80.0 + scrollY * (1.2), -50.0 + scrollY * (-0.3));
+    cd1Pos.rotation.set(-10.0, 80.0 + scrollY * 0.2, -10.0);
+    model1.position.set(cd1Pos.position.x, cd1Pos.position.y, cd1Pos.position.z);
+    model1.rotation.set(cd1Pos.rotation.x, cd1Pos.rotation.y, cd1Pos.rotation.z);
+
+    co2panel.position.y = cd1Pos.position.y + 12.0;
+    co2panel.position.x = cd1Pos.position.x;
+    co2panel.position.z = cd1Pos.position.z;
+    co2panel.lookAt(camera.position);
+
+
+
+
+
+
+
 
     o2panel.lookAt(camera.position);
 
@@ -222,6 +299,13 @@ function animate() {
         // star.position.addScaledVector(explodeVector, 1.0);
 
         i += 1;
+      });
+    } else {
+      stars.forEach((star) => {
+        star.material.opacity = 0.0;
+        star.position.x = 0.0;
+        star.position.y = 0.0;
+        star.position.z = 0.0;
       });
     }
 
@@ -270,12 +354,14 @@ function animate() {
 
 
     // Calculate fade factor (0 = fully visible, 1 = fully transparent)
-    let fadeFactor = (scrollY - fadeStart) / (fadeEnd - fadeStart);
+    let fadeFactor = ((scrollY - fadeStart) / (fadeEnd - fadeStart));
     fadeFactor = Math.min(Math.max(fadeFactor, 0), 1); // Clamp between 0 and 1
     // Apply opacity based on fade factor
     oxygen.material.opacity = 1 - fadeFactor;
     oxygen2.material.opacity = 1 - fadeFactor;
-    o2panel.material.opacity = fadeFactor;
+    o2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
+    co2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
+    h2opanel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
 
 
 

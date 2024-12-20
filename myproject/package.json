@@ -14,6 +14,7 @@
     "vitest": "^2.1.8"
   },
   "dependencies": {
+    "seedrandom": "^3.0.5",
     "three": "^0.171.0"
   }
 }
