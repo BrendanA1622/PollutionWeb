@@ -5,12 +5,57 @@
     <link rel="icon" type="image/svg+xml" href="src/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      #reset-button {
+        position: absolute;
+        top: 10%;
+        left: 10%;
+        transform: translate(-50%, -50%);
+        padding: 20px 40px;
+        background-color: red;
+        color: white;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      }
+      #reset-button:active {
+        transform: translate(-50%, -50%) scale(0.95);
+      }
+      #play-button {
+        display:block;
+        height: 520px;
+        width: 520px;
+        border-radius: 50%;
+        border: 1px solid #f84040;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border: none;
+        color: white;
+        background-color: #f84040;
+        font-size: 80px;
+        cursor: pointer;
+      }
+      #play-button:active {
+        color: #f84040;
+        /* transform: translate(-50%, -50%) scale(0.95); */
+      }
+    </style>
   </head>
   <body>
+    <button id="play-button">BEGIN</button>
+    <div id="scene-container"></div>
     <div id="camera-rotation" style="position: absolute; top: 20px; left: 20px; color: white; font-size: 24px; z-index: 1">
       Camera Rotation Y: 0
     </div>
-    <canvas id="bg"></canvas>
+    <!-- <canvas id="bg"></canvas> -->
     <script type="module" src="src/main.js"></script>
   </body>
 </html>
