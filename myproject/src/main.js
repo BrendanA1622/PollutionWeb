@@ -5,14 +5,17 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { AnimationMixer } from 'three';
 
+let mixer, animationAction;
 const button = document.getElementById("play-button");
 const resetButton = document.createElement("button"); // Create a Reset button
 resetButton.innerText = "Reset";
 resetButton.id = "reset-button";
 resetButton.style.display = "none";
 document.body.appendChild(resetButton);
-
 const container = document.getElementById("scene-container");
+
+let gcaModel;
+const debugObject = new THREE.Object3D();
 
 button.addEventListener("click", () => {
   // Hide the button
@@ -36,6 +39,26 @@ button.addEventListener("click", () => {
   camera.position.setZ(10);
   renderer.render( scene, camera );
 
+
+
+  //////////////////////////////////////// GLUCOSE ANIMATION  ///////////////////////////////////
+  const gcaloader = new GLTFLoader();
+  gcaloader.load('./blenderModels/breakGlucoseAnim.glb', (gltf) => {
+    gcaModel = gltf.scene;
+    scene.add(gcaModel);
+    gcaModel.scale.set(5.9, 5.9, 5.9);
+    gcaModel.position.set(-30,10,-130);
+    gcaModel.position.set(debugObject.position.x, debugObject.position.y, debugObject.position.z);
+    gcaModel.rotation.set(debugObject.rotation.x, debugObject.rotation.y, debugObject.rotation.z);
+
+
+    // Set up the animation mixer
+    mixer = new AnimationMixer(gcaModel);
+
+    // Access the first animation in the GLTF file
+    const clip = gltf.animations[0];
+    animationAction = mixer.clipAction(clip);
+  });
 
   ////////////// MAKING O ATOMS
   const geometry = new THREE.SphereGeometry(6,64,64)
@@ -273,188 +296,302 @@ button.addEventListener("click", () => {
 
 
 
+  const keys = {
+    ArrowUp: false,
+    ArrowDown: false,
+    ArrowLeft: false,
+    ArrowRight: false,
+  };
+  window.addEventListener('keydown', (event) => {
+    if (event.key in keys) {
+        keys[event.key] = true;
+    }
+  });
+  window.addEventListener('keyup', (event) => {
+    if (event.key in keys) {
+        keys[event.key] = false;
+    }
+  });
 
-  /////////////////////////////////////////// ANIMATE
+
+  // const debugObject = new THREE.Object3D();
+  debugObject.position.set(0, 0, 0);
+  debugObject.rotation.set(0, 0, 0);
+
+  let isZPressed = false;
+  let isXPressed = false;
+  let isCPressed = false;
+  let isVPressed = false;
+  let isBPressed = false;
+  let isDPressed = false;
+  let isFPressed = false;
+  let isGPressed = false;
+
+  // Event listeners to update the boolean states
+document.addEventListener('keydown', (event) => {
+  switch (event.key) {
+      case 'z':
+          isZPressed = true;
+          break;
+      case 'x':
+          isXPressed = true;
+          break;
+      case 'c':
+          isCPressed = true;
+          break;
+      case 'v':
+          isVPressed = true;
+          break;
+      case 'b':
+          isBPressed = true;
+          break;
+      case 'd':
+          isDPressed = true;
+          break;
+      case 'f':
+          isFPressed = true;
+          break;
+      case 'g':
+          isGPressed = true;
+          break;
+      default:
+          break;
+  }
+});
+
+document.addEventListener('keyup', (event) => {
+  switch (event.key) {
+      case 'z':
+          isZPressed = false;
+          break;
+      case 'x':
+          isXPressed = false;
+          break;
+      case 'c':
+          isCPressed = false;
+          break;
+      case 'v':
+          isVPressed = false;
+          break;
+      case 'b':
+          isBPressed = false;
+          break;
+      case 'd':
+          isDPressed = false;
+          break;
+      case 'f':
+          isFPressed = false;
+          break;
+      case 'g':
+          isGPressed = false;
+          break;
+      default:
+          break;
+  }
+});
+
+const debugPosSensitivity = 0.30;
+const debugRotSensitivity = 0.01;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////// ANIMATE ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   function animate() {
-      requestAnimationFrame( animate );
-      const scrollY = camera.position.distanceTo(centerPoint.position);
-      currentTargetY += (scrollTargetY - currentTargetY) * 0.1;
+    console.log("Pos: "+String(debugObject.position.x.toFixed(2))+", "+String(debugObject.position.y.toFixed(2))+", "+String(debugObject.position.z.toFixed(2)) + " ||| Rot: "+String(debugObject.rotation.x.toFixed(2))+", "+String(debugObject.rotation.y.toFixed(2))+", "+String(debugObject.rotation.z.toFixed(2)));
+
+    debugObject.position.set((Number(keys.ArrowRight) * debugPosSensitivity) - (Number(keys.ArrowLeft) * debugPosSensitivity) + debugObject.position.x, debugObject.position.y, debugObject.position.z);
+    debugObject.position.set(debugObject.position.x, (Number(keys.ArrowUp) * debugPosSensitivity) - (Number(keys.ArrowDown) * debugPosSensitivity) + debugObject.position.y, debugObject.position.z);
+    debugObject.position.set(debugObject.position.x, debugObject.position.y, (Number(isZPressed) * debugPosSensitivity) - (Number(isXPressed) * debugPosSensitivity) + debugObject.position.z);
+
+    debugObject.rotation.set((Number(isCPressed) * debugRotSensitivity) - (Number(isDPressed) * debugRotSensitivity) + debugObject.rotation.x, debugObject.rotation.y, debugObject.rotation.z);
+    debugObject.rotation.set(debugObject.rotation.x, (Number(isVPressed) * debugRotSensitivity) - (Number(isFPressed) * debugRotSensitivity) + debugObject.rotation.y, debugObject.rotation.z);
+    debugObject.rotation.set(debugObject.rotation.x, debugObject.rotation.y, (Number(isBPressed) * debugRotSensitivity) - (Number(isGPressed) * debugRotSensitivity) + debugObject.rotation.z);
+
+    if (gcaModel) {
+      gcaModel.position.set(debugObject.position.x, debugObject.position.y, debugObject.position.z);
+      gcaModel.rotation.set(debugObject.rotation.x, debugObject.rotation.y, debugObject.rotation.z);
+    }
+    
+
+
+    requestAnimationFrame( animate );
+    const scrollY = camera.position.distanceTo(centerPoint.position);
+    currentTargetY += (scrollTargetY - currentTargetY) * 0.1;
+
+    model.position.set(h2o1Pos.position.x, h2o1Pos.position.y, h2o1Pos.position.z);
+    model.rotation.set(h2o1Pos.rotation.x, h2o1Pos.rotation.y, h2o1Pos.rotation.z);
+    h2o1Pos.position.set(-80.0 + scrollY * (1.1), 40.0 - scrollY * (1.1), -40.0 + scrollY * (0.3));
+    h2o1Pos.rotation.set(-80.0 + scrollY * 0.2, 10.0, -10.0);
+    
+
+    h2opanel.position.y = h2o1Pos.position.y + 12.0;
+    h2opanel.position.x = h2o1Pos.position.x;
+    h2opanel.position.z = h2o1Pos.position.z;
+    h2opanel.lookAt(camera.position);
 
 
 
-      h2o1Pos.position.set(-80.0 + scrollY * (1.1), 40.0 - scrollY * (1.1), -40.0 + scrollY * (0.3));
-      h2o1Pos.rotation.set(-80.0 + scrollY * 0.2, 10.0, -10.0);
-      model.position.set(h2o1Pos.position.x, h2o1Pos.position.y, h2o1Pos.position.z);
-      model.rotation.set(h2o1Pos.rotation.x, h2o1Pos.rotation.y, h2o1Pos.rotation.z);
+    cd1Pos.position.set(150.0 + scrollY * (-1.1), -80.0 + scrollY * (1.2), -50.0 + scrollY * (-0.3));
+    cd1Pos.rotation.set(-10.0, 80.0 + scrollY * 0.2, -10.0);
+    model1.position.set(cd1Pos.position.x, cd1Pos.position.y, cd1Pos.position.z);
+    model1.rotation.set(cd1Pos.rotation.x, cd1Pos.rotation.y, cd1Pos.rotation.z);
 
-      h2opanel.position.y = h2o1Pos.position.y + 12.0;
-      h2opanel.position.x = h2o1Pos.position.x;
-      h2opanel.position.z = h2o1Pos.position.z;
-      h2opanel.lookAt(camera.position);
-
-
-
-      cd1Pos.position.set(150.0 + scrollY * (-1.1), -80.0 + scrollY * (1.2), -50.0 + scrollY * (-0.3));
-      cd1Pos.rotation.set(-10.0, 80.0 + scrollY * 0.2, -10.0);
-      model1.position.set(cd1Pos.position.x, cd1Pos.position.y, cd1Pos.position.z);
-      model1.rotation.set(cd1Pos.rotation.x, cd1Pos.rotation.y, cd1Pos.rotation.z);
-
-      co2panel.position.y = cd1Pos.position.y + 12.0;
-      co2panel.position.x = cd1Pos.position.x;
-      co2panel.position.z = cd1Pos.position.z;
-      co2panel.lookAt(camera.position);
-
-
-
-
-
-
-
-
-      o2panel.lookAt(camera.position);
-
-      ////////// MOVING BOND ENERGY PARTICLES  ////////////////
-      if ( scrollY > 27.1 && scrollY < 45.0) {
-        var i = 0;
-        stars.forEach((star) => {
-          star.material.opacity = (45.0 - scrollY) / (45.0 - 27.1);
-          // var explodeAzimuth = (i * 2.0 * Math.PI) / 50.0;
-          // var explodePolar = (Math.random() - 0.5) * (Math.PI / 4);
-          const explodeVector = createVectorFromAngles(explodePolar[i], explodeAzimuth[i]);
-          // const explodeVector = createVectorFromAngles(0.0, 0.0);
-          star.position.x = explodeVector.x * (scrollY - 27.1) * 10.0;
-          star.position.y = explodeVector.y * (scrollY - 27.1) * 10.0;
-          star.position.z = explodeVector.z * (scrollY - 27.1) * 10.0;
-          // star.position.addScaledVector(explodeVector, 1.0);
-
-          i += 1;
-        });
-      } else {
-        stars.forEach((star) => {
-          star.material.opacity = 0.0;
-          star.position.x = 0.0;
-          star.position.y = 0.0;
-          star.position.z = 0.0;
-        });
-      }
-
-      
-
-      // camera.position.x += (scrollTargetY - currentTargetY) * 0.1;
-      // camera.position.y += (scrollTargetY - currentTargetY) * 0.1;
-      // camera.position.z += (scrollTargetY - currentTargetY) * 0.1;
-
-      const zoom_direction = new THREE.Vector3();
-      camera.getWorldDirection(zoom_direction);
-
-      // Update the camera position to move along its facing direction
-      camera.position.addScaledVector(zoom_direction, (-scrollTargetY + currentTargetY) * 0.1 * (Math.log(scrollY + 1.0) - 2.0));
+    co2panel.position.y = cd1Pos.position.y + 12.0;
+    co2panel.position.x = cd1Pos.position.x;
+    co2panel.position.z = cd1Pos.position.z;
+    co2panel.lookAt(camera.position);
 
 
 
 
-      
 
-      let targetOxy, targetOxy2;
-      if (scrollY < 30) {
-        oxygen2.position.set(Math.max(7.5, Math.pow(Math.abs(30 - scrollY),2)),0,0);
-        blankOxygen2.position.set(Math.max(7.5, Math.pow(Math.abs(30 - scrollY),2)),0,0);
-        if (Math.pow(Math.abs(30 - scrollY),2) < 7.5) {
-          targetOxy = -7.5;
-          // targetOxy2 = 7.5;
-        } else {
-          targetOxy = 0.0;
-        }
-        oxygen.position.x += (targetOxy - oxygen.position.x) * 0.1;
-        blankOxygen.position.x = oxygen.position.x;
-      } else {
+
+
+
+    o2panel.lookAt(camera.position);
+
+    ////////// MOVING BOND ENERGY PARTICLES  ////////////////
+    if ( scrollY > 27.1 && scrollY < 45.0) {
+      var i = 0;
+      stars.forEach((star) => {
+        star.material.opacity = (45.0 - scrollY) / (45.0 - 27.1);
+        // var explodeAzimuth = (i * 2.0 * Math.PI) / 50.0;
+        // var explodePolar = (Math.random() - 0.5) * (Math.PI / 4);
+        const explodeVector = createVectorFromAngles(explodePolar[i], explodeAzimuth[i]);
+        // const explodeVector = createVectorFromAngles(0.0, 0.0);
+        star.position.x = explodeVector.x * (scrollY - 27.1) * 10.0;
+        star.position.y = explodeVector.y * (scrollY - 27.1) * 10.0;
+        star.position.z = explodeVector.z * (scrollY - 27.1) * 10.0;
+        // star.position.addScaledVector(explodeVector, 1.0);
+
+        i += 1;
+      });
+    } else {
+      stars.forEach((star) => {
+        star.material.opacity = 0.0;
+        star.position.x = 0.0;
+        star.position.y = 0.0;
+        star.position.z = 0.0;
+      });
+    }
+
+    
+
+    // camera.position.x += (scrollTargetY - currentTargetY) * 0.1;
+    // camera.position.y += (scrollTargetY - currentTargetY) * 0.1;
+    // camera.position.z += (scrollTargetY - currentTargetY) * 0.1;
+
+    const zoom_direction = new THREE.Vector3();
+    camera.getWorldDirection(zoom_direction);
+
+    // Update the camera position to move along its facing direction
+    camera.position.addScaledVector(zoom_direction, (-scrollTargetY + currentTargetY) * 0.1 * (Math.log(scrollY + 1.0) - 2.0));
+
+
+
+
+    
+
+    let targetOxy, targetOxy2;
+    if (scrollY < 30) {
+      oxygen2.position.set(Math.max(7.5, Math.pow(Math.abs(30 - scrollY),2)),0,0);
+      blankOxygen2.position.set(Math.max(7.5, Math.pow(Math.abs(30 - scrollY),2)),0,0);
+      if (Math.pow(Math.abs(30 - scrollY),2) < 7.5) {
         targetOxy = -7.5;
-        oxygen.position.x += (targetOxy - oxygen.position.x) * 0.1;
-        blankOxygen.position.x = oxygen.position.x;
-      }
-
-      // oxygen2.position.x += (targetOxy2 - oxygen2.position.x) * 0.1;
-      // blankOxygen2.position.x = oxygen2.position.x;
-
-      
-
-
-
-
-
-      // Calculate fade factor (0 = fully visible, 1 = fully transparent)
-      let fadeFactor = ((scrollY - fadeStart) / (fadeEnd - fadeStart));
-      fadeFactor = Math.min(Math.max(fadeFactor, 0), 1); // Clamp between 0 and 1
-      // Apply opacity based on fade factor
-      oxygen.material.opacity = 1 - fadeFactor;
-      oxygen2.material.opacity = 1 - fadeFactor;
-      o2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
-      co2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
-      h2opanel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
-
-
-
-      /////////// ALL THE CODE FOR ROTATING OXYGEN /////////////
-      direction.subVectors(camera.position, oxygen.position);
-      direction.normalize();
-      const angle = Math.atan2(direction.z, direction.x);
-      var targetYRot = -angle;
-      var targetZRot = direction.y;
-      let deltaYRot = targetYRot - oxygen.rotation.y;
-      if (deltaYRot > Math.PI) deltaYRot -= 2 * Math.PI;
-      if (deltaYRot < -Math.PI) deltaYRot += 2 * Math.PI;
-      oxygen.rotation.y += 0.15 * deltaYRot;
-
-      direction2.subVectors(camera.position, oxygen2.position);
-      direction2.normalize();
-      const angle2 = Math.atan2(direction2.z, direction2.x);
-      var targetYRot2 = -angle2;
-      var targetZRot2 = direction2.y;
-      let deltaYRot2 = targetYRot2 - oxygen2.rotation.y;
-      if (deltaYRot2 > Math.PI) deltaYRot2 -= 2 * Math.PI;
-      if (deltaYRot2 < -Math.PI) deltaYRot2 += 2 * Math.PI;
-      oxygen2.rotation.y += 0.15 * deltaYRot2;
-
-      let deltaZRot = targetZRot - oxygen.rotation.z;
-      if (deltaZRot > Math.PI) deltaZRot -= 2 * Math.PI;
-      if (deltaZRot < -Math.PI) deltaZRot += 2 * Math.PI;
-      oxygen.rotation.z += 0.15 * deltaZRot;
-
-      let deltaZRot2 = targetZRot2 - oxygen2.rotation.z;
-      if (deltaZRot2 > Math.PI) deltaZRot2 -= 2 * Math.PI;
-      if (deltaZRot2 < -Math.PI) deltaZRot2 += 2 * Math.PI;
-      oxygen2.rotation.z += 0.15 * deltaZRot2;
-
-      oxygen.rotation.x = 0.0;
-      oxygen2.rotation.x = 0.0;
-
-
-
-      const distance = camera.position.distanceTo(centerPoint.position);
-      // Assume 1 unit in the scene = 1 meter in real life
-      const scale = distance * oxygenAtomSize * 0.125;
-      // Format the scale as a human-readable string
-      let scaleLabel;
-      if (scale < 1e-9) {
-          scaleLabel = `${(scale * 1e12).toFixed(2)} pm (picometers)`;
-      } else if (scale < 1e-6) {
-          scaleLabel = `${(scale * 1e9).toFixed(2)} nm (nanometers)`;
-      } else if (scale < 1e-3) {
-          scaleLabel = `${(scale * 1e6).toFixed(2)} µm (micrometers)`;
+        // targetOxy2 = 7.5;
       } else {
-          scaleLabel = `${scale.toFixed(2)} m (meters)`;
+        targetOxy = 0.0;
       }
+      oxygen.position.x += (targetOxy - oxygen.position.x) * 0.1;
+      blankOxygen.position.x = oxygen.position.x;
+    } else {
+      targetOxy = -7.5;
+      oxygen.position.x += (targetOxy - oxygen.position.x) * 0.1;
+      blankOxygen.position.x = oxygen.position.x;
+    }
+
+    // oxygen2.position.x += (targetOxy2 - oxygen2.position.x) * 0.1;
+    // blankOxygen2.position.x = oxygen2.position.x;
+
+    
 
 
-      // scale = 10.0 * Math.log(scrollY + 1.0);
-
-      // rotationElement.innerText = `Screen height: ${scaleLabel}`;
-      rotationElement.innerText = `ScrollY: ${Math.log(scrollY + 1.0).toFixed(2)}`;
 
 
-      controls.update();
 
-      renderer.render( scene, camera );
+    // Calculate fade factor (0 = fully visible, 1 = fully transparent)
+    let fadeFactor = ((scrollY - fadeStart) / (fadeEnd - fadeStart));
+    fadeFactor = Math.min(Math.max(fadeFactor, 0), 1); // Clamp between 0 and 1
+    // Apply opacity based on fade factor
+    oxygen.material.opacity = 1 - fadeFactor;
+    oxygen2.material.opacity = 1 - fadeFactor;
+    o2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
+    co2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
+    h2opanel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
+
+
+
+    /////////// ALL THE CODE FOR ROTATING OXYGEN /////////////
+    direction.subVectors(camera.position, oxygen.position);
+    direction.normalize();
+    const angle = Math.atan2(direction.z, direction.x);
+    var targetYRot = -angle;
+    var targetZRot = direction.y;
+    let deltaYRot = targetYRot - oxygen.rotation.y;
+    if (deltaYRot > Math.PI) deltaYRot -= 2 * Math.PI;
+    if (deltaYRot < -Math.PI) deltaYRot += 2 * Math.PI;
+    oxygen.rotation.y += 0.15 * deltaYRot;
+
+    direction2.subVectors(camera.position, oxygen2.position);
+    direction2.normalize();
+    const angle2 = Math.atan2(direction2.z, direction2.x);
+    var targetYRot2 = -angle2;
+    var targetZRot2 = direction2.y;
+    let deltaYRot2 = targetYRot2 - oxygen2.rotation.y;
+    if (deltaYRot2 > Math.PI) deltaYRot2 -= 2 * Math.PI;
+    if (deltaYRot2 < -Math.PI) deltaYRot2 += 2 * Math.PI;
+    oxygen2.rotation.y += 0.15 * deltaYRot2;
+
+    let deltaZRot = targetZRot - oxygen.rotation.z;
+    if (deltaZRot > Math.PI) deltaZRot -= 2 * Math.PI;
+    if (deltaZRot < -Math.PI) deltaZRot += 2 * Math.PI;
+    oxygen.rotation.z += 0.15 * deltaZRot;
+
+    let deltaZRot2 = targetZRot2 - oxygen2.rotation.z;
+    if (deltaZRot2 > Math.PI) deltaZRot2 -= 2 * Math.PI;
+    if (deltaZRot2 < -Math.PI) deltaZRot2 += 2 * Math.PI;
+    oxygen2.rotation.z += 0.15 * deltaZRot2;
+
+    oxygen.rotation.x = 0.0;
+    oxygen2.rotation.x = 0.0;
+
+
+
+    const distance = camera.position.distanceTo(centerPoint.position);
+    // Assume 1 unit in the scene = 1 meter in real life
+    const scale = distance * oxygenAtomSize * 0.125;
+    // Format the scale as a human-readable string
+    let scaleLabel;
+    if (scale < 1e-9) {
+        scaleLabel = `${(scale * 1e12).toFixed(2)} pm (picometers)`;
+    } else if (scale < 1e-6) {
+        scaleLabel = `${(scale * 1e9).toFixed(2)} nm (nanometers)`;
+    } else if (scale < 1e-3) {
+        scaleLabel = `${(scale * 1e6).toFixed(2)} µm (micrometers)`;
+    } else {
+        scaleLabel = `${scale.toFixed(2)} m (meters)`;
+    }
+
+
+    // scale = 10.0 * Math.log(scrollY + 1.0);
+
+    // rotationElement.innerText = `Screen height: ${scaleLabel}`;
+    rotationElement.innerText = `ScrollY: ${Math.log(scrollY + 1.0).toFixed(2)}`;
+
+
+    controls.update();
+
+    renderer.render( scene, camera );
   }
 
   animate()
