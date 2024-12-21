@@ -6,6 +6,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { AnimationMixer } from 'three';
 
 let mixer, animationAction;
+let gcactions = [];
+const clock = new THREE.Clock();
 const button = document.getElementById("play-button");
 const resetButton = document.createElement("button"); // Create a Reset button
 resetButton.innerText = "Reset";
@@ -16,6 +18,16 @@ const container = document.getElementById("scene-container");
 
 let gcaModel;
 const debugObject = new THREE.Object3D();
+
+function setModelOpacity(model, opacity) {
+  model.traverse((child) => {
+      if (child.isMesh && child.material) {
+          child.material.transparent = true; // Enable transparency
+          child.material.opacity = opacity; // Set opacity
+      }
+  });
+}
+
 
 button.addEventListener("click", () => {
   // Hide the button
@@ -47,17 +59,22 @@ button.addEventListener("click", () => {
     gcaModel = gltf.scene;
     scene.add(gcaModel);
     gcaModel.scale.set(5.9, 5.9, 5.9);
-    gcaModel.position.set(-30,10,-130);
-    gcaModel.position.set(debugObject.position.x, debugObject.position.y, debugObject.position.z);
-    gcaModel.rotation.set(debugObject.rotation.x, debugObject.rotation.y, debugObject.rotation.z);
+    // gcaModel.position.set(-30,10,-130);
+    gcaModel.position.set(linterpolate(scrollY,105,73.50,180,42.30), linterpolate(scrollY,105,-56.10,180,29.70), linterpolate(scrollY,105,-242.40,180,5.70));
+    gcaModel.rotation.set(linterpolate(scrollY,105,-0.72,180,-0.67), linterpolate(scrollY,105,3.90,2.78,42.30), linterpolate(scrollY,105,0.23,180,-0.12));
+    // gcaModel.position.set(debugObject.position.x, debugObject.position.y, debugObject.position.z);
+    // gcaModel.rotation.set(debugObject.rotation.x, debugObject.rotation.y, debugObject.rotation.z);
 
 
     // Set up the animation mixer
-    mixer = new AnimationMixer(gcaModel);
+    // mixer = new AnimationMixer(gcaModel);
+    mixer = new THREE.AnimationMixer(gltf.scene);
 
-    // Access the first animation in the GLTF file
-    const clip = gltf.animations[0];
-    animationAction = mixer.clipAction(clip);
+    gltf.animations.forEach((clip) => {
+      const action = mixer.clipAction(clip);
+      gcactions.push({ action, clip });
+    });
+    setModelOpacity(gcaModel, 0.0);
   });
 
   ////////////// MAKING O ATOMS
@@ -314,9 +331,22 @@ button.addEventListener("click", () => {
   });
 
 
-  // const debugObject = new THREE.Object3D();
-  debugObject.position.set(0, 0, 0);
-  debugObject.rotation.set(0, 0, 0);
+  function linterpolate(currentTime,t1,x1,t2,x2) {
+    // Clamp currentTime within the range [t1, t2]
+    const clampedTime = Math.max(t1, Math.min(t2, currentTime));
+
+    // Normalize time to a value between 0 and 1
+    const normalizedTime = (clampedTime - t1) / (t2 - t1);
+
+    // Interpolate between x1 and x2
+    return x1 + normalizedTime * (x2 - x1);
+  }
+
+  ///////////////////////////////////////////////////////////////////{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+  // Starts at 105, Pos: 73.50, -56.10, -242.40 ||| Rot: -0.72, 3.90, 0.23
+  debugObject.position.set(73.50, -56.10, -242.40);
+  debugObject.rotation.set(-0.72, 3.90, 0.23);
+  // By 180 need to get to Pos: 42.30, 29.70, 5.70 ||| Rot: -0.67, 2.78, -0.12
 
   let isZPressed = false;
   let isXPressed = false;
@@ -328,76 +358,97 @@ button.addEventListener("click", () => {
   let isGPressed = false;
 
   // Event listeners to update the boolean states
-document.addEventListener('keydown', (event) => {
-  switch (event.key) {
-      case 'z':
-          isZPressed = true;
-          break;
-      case 'x':
-          isXPressed = true;
-          break;
-      case 'c':
-          isCPressed = true;
-          break;
-      case 'v':
-          isVPressed = true;
-          break;
-      case 'b':
-          isBPressed = true;
-          break;
-      case 'd':
-          isDPressed = true;
-          break;
-      case 'f':
-          isFPressed = true;
-          break;
-      case 'g':
-          isGPressed = true;
-          break;
-      default:
-          break;
-  }
-});
+  document.addEventListener('keydown', (event) => {
+    switch (event.key) {
+        case 'z':
+            isZPressed = true;
+            break;
+        case 'x':
+            isXPressed = true;
+            break;
+        case 'c':
+            isCPressed = true;
+            break;
+        case 'v':
+            isVPressed = true;
+            break;
+        case 'b':
+            isBPressed = true;
+            break;
+        case 'd':
+            isDPressed = true;
+            break;
+        case 'f':
+            isFPressed = true;
+            break;
+        case 'g':
+            isGPressed = true;
+            break;
+        default:
+            break;
+    }
+  });
 
-document.addEventListener('keyup', (event) => {
-  switch (event.key) {
-      case 'z':
-          isZPressed = false;
-          break;
-      case 'x':
-          isXPressed = false;
-          break;
-      case 'c':
-          isCPressed = false;
-          break;
-      case 'v':
-          isVPressed = false;
-          break;
-      case 'b':
-          isBPressed = false;
-          break;
-      case 'd':
-          isDPressed = false;
-          break;
-      case 'f':
-          isFPressed = false;
-          break;
-      case 'g':
-          isGPressed = false;
-          break;
-      default:
-          break;
-  }
-});
+  document.addEventListener('keyup', (event) => {
+    switch (event.key) {
+        case 'z':
+            isZPressed = false;
+            break;
+        case 'x':
+            isXPressed = false;
+            break;
+        case 'c':
+            isCPressed = false;
+            break;
+        case 'v':
+            isVPressed = false;
+            break;
+        case 'b':
+            isBPressed = false;
+            break;
+        case 'd':
+            isDPressed = false;
+            break;
+        case 'f':
+            isFPressed = false;
+            break;
+        case 'g':
+            isGPressed = false;
+            break;
+        default:
+            break;
+    }
+  });
 
-const debugPosSensitivity = 0.30;
-const debugRotSensitivity = 0.01;
+  const debugPosSensitivity = 0.30;
+  const debugRotSensitivity = 0.01;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////// ANIMATE ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////// ANIMATE ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   function animate() {
-    console.log("Pos: "+String(debugObject.position.x.toFixed(2))+", "+String(debugObject.position.y.toFixed(2))+", "+String(debugObject.position.z.toFixed(2)) + " ||| Rot: "+String(debugObject.rotation.x.toFixed(2))+", "+String(debugObject.rotation.y.toFixed(2))+", "+String(debugObject.rotation.z.toFixed(2)));
+    const scrollY = camera.position.distanceTo(centerPoint.position);
+
+
+    // console.log("Pos: "+String(debugObject.position.x.toFixed(2))+", "+String(debugObject.position.y.toFixed(2))+", "+String(debugObject.position.z.toFixed(2)) + " ||| Rot: "+String(debugObject.rotation.x.toFixed(2))+", "+String(debugObject.rotation.y.toFixed(2))+", "+String(debugObject.rotation.z.toFixed(2)));
+
+
+    gcactions.forEach(({ action, clip }) => {
+      action.time = Math.min(Math.max(0.0,(scrollY - 105.0) * 0.1), 16.0); // Map scroll progress to animation time
+      action.play(); // Ensure the action is playing
+    });
+    if (gcaModel) {
+      setModelOpacity(gcaModel, Math.max(0.0,(scrollY - 105.0) * 0.03));
+      if (scrollY > 240) {
+        setModelOpacity(gcaModel, 1.0 - (scrollY - 240.0) * 0.06);
+      }
+    }
+
+    if (mixer) mixer.update(clock.getDelta());
+
+
+
+
 
     debugObject.position.set((Number(keys.ArrowRight) * debugPosSensitivity) - (Number(keys.ArrowLeft) * debugPosSensitivity) + debugObject.position.x, debugObject.position.y, debugObject.position.z);
     debugObject.position.set(debugObject.position.x, (Number(keys.ArrowUp) * debugPosSensitivity) - (Number(keys.ArrowDown) * debugPosSensitivity) + debugObject.position.y, debugObject.position.z);
@@ -408,14 +459,21 @@ const debugRotSensitivity = 0.01;
     debugObject.rotation.set(debugObject.rotation.x, debugObject.rotation.y, (Number(isBPressed) * debugRotSensitivity) - (Number(isGPressed) * debugRotSensitivity) + debugObject.rotation.z);
 
     if (gcaModel) {
-      gcaModel.position.set(debugObject.position.x, debugObject.position.y, debugObject.position.z);
-      gcaModel.rotation.set(debugObject.rotation.x, debugObject.rotation.y, debugObject.rotation.z);
+      if (scrollY < 180.0) {
+        gcaModel.position.set(linterpolate(scrollY,105,73.50,180,43.50), linterpolate(scrollY,105,-56.10,180,23.40), linterpolate(scrollY,105,-242.40,180,-21.00));
+        gcaModel.rotation.set(linterpolate(scrollY,105,-0.72,180,-1.36), linterpolate(scrollY,105,3.90,180,2.83), linterpolate(scrollY,105,0.23,180,-0.18));
+      } else if (scrollY > 180.0) {
+        gcaModel.position.set(linterpolate(scrollY,180,43.50,285,13.50), linterpolate(scrollY,180,23.40,285,102.9), linterpolate(scrollY,180,-21.00,285,200.4));
+        // gcaModel.rotation.set(linterpolate(scrollY,180,-1.36,255,-2.00), linterpolate(scrollY,180,2.83,255,1.76), linterpolate(scrollY,180,-0.18,255,-0.59));
+      }
     }
+
+
     
 
 
     requestAnimationFrame( animate );
-    const scrollY = camera.position.distanceTo(centerPoint.position);
+    
     currentTargetY += (scrollTargetY - currentTargetY) * 0.1;
 
     model.position.set(h2o1Pos.position.x, h2o1Pos.position.y, h2o1Pos.position.z);
@@ -586,7 +644,7 @@ const debugRotSensitivity = 0.01;
     // scale = 10.0 * Math.log(scrollY + 1.0);
 
     // rotationElement.innerText = `Screen height: ${scaleLabel}`;
-    rotationElement.innerText = `ScrollY: ${Math.log(scrollY + 1.0).toFixed(2)}`;
+    rotationElement.innerText = `ScrollY: ${scrollY.toFixed(2)}`;
 
 
     controls.update();
