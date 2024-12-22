@@ -55,7 +55,7 @@ button.addEventListener("click", () => {
 
   //////////////////////////////////////// GLUCOSE ANIMATION  ///////////////////////////////////
   const gcaloader = new GLTFLoader();
-  gcaloader.load('./blenderModels/breakGlucoseAnim.glb', (gltf) => {
+  gcaloader.load('./blenderModels/breakGlucoseAnim1.glb', (gltf) => {
     gcaModel = gltf.scene;
     scene.add(gcaModel);
     gcaModel.scale.set(5.9, 5.9, 5.9);
@@ -76,6 +76,22 @@ button.addEventListener("click", () => {
     });
     setModelOpacity(gcaModel, 0.0);
   });
+
+  /////////////// Displaying Glucose Molecule Panel
+  const gctexture = new THREE.TextureLoader().load('./images/GlucoseMoleculeDescriptor.png');
+  const gcgeometry = new THREE.PlaneGeometry(120, 28.805); // Adjust size as needed
+  const gcmaterial = new THREE.MeshBasicMaterial({ map: gctexture, transparent: true, opacity: 0.0 });
+  const gcpanel = new THREE.Mesh(gcgeometry, gcmaterial);
+  scene.add(gcpanel);
+
+  /////////////// Displaying Reaction Panel
+  const combtexture = new THREE.TextureLoader().load('./images/CombustionReaction1.png');
+  const combgeometry = new THREE.PlaneGeometry(160, 120); // Adjust size as needed
+  const combmaterial = new THREE.MeshBasicMaterial({ map: combtexture, transparent: true, opacity: 0.0 });
+  const combpanel = new THREE.Mesh(combgeometry, combmaterial);
+  scene.add(combpanel);
+
+
 
   ////////////// MAKING O ATOMS
   const geometry = new THREE.SphereGeometry(6,64,64)
@@ -228,7 +244,29 @@ button.addEventListener("click", () => {
   })
 
 
+  function makeExplosion(randP,randA,starArray,start,end,x1,y1,z1) {
+    if ( scrollY > start && scrollY < end) {
+      var i = 0;
+      // console.log("IIIIIIIM HEEEEERRRREEEEE");
+      starArray.forEach((star) => {
+        star.material.opacity = (end - scrollY) / (end - start);
+        const explodeVector = createVectorFromAngles(randP[i], randA[i]);
+        star.position.x = x1 + explodeVector.x * (scrollY - start) * 10.0;
+        star.position.y = y1 + explodeVector.y * (scrollY - start) * 10.0;
+        star.position.z = z1 + explodeVector.z * (scrollY - start) * 10.0;
 
+        i += 1;
+      });
+      
+    } else {
+      starArray.forEach((star) => {
+        star.material.opacity = 0.0;
+        star.position.x = 0.0;
+        star.position.y = 0.0;
+        star.position.z = 0.0;
+      });
+    }
+  }
 
   const stars = [];
   const explodeAzimuth = [];
@@ -236,19 +274,103 @@ button.addEventListener("click", () => {
   function addStar() {
     const geometryS = new THREE.SphereGeometry(0.3, 12, 12);
     const materialS = new THREE.MeshBasicMaterial( { color: 0xfff671, opacity: 1.0, transparent: true });
-    // const material = new THREE.MeshStandardMaterial( { color: 0xFFFFFF });
     const star = new THREE.Mesh( geometryS, materialS );
-
     const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread( 300 ) );
-
     star.position.set(0, 0, 0);
     explodeAzimuth.push(Math.random() * (Math.PI * 2));
     explodePolar.push(Math.random() * (Math.PI * 2));
     stars.push(star);
-    scene.add(star)
+    scene.add(star);
   }
+  Array(200).fill().forEach(addStar);
 
-  Array(200).fill().forEach(addStar)
+
+  const stars1 = [];
+  const explodeAzimuth1 = [];
+  const explodePolar1 = [];
+  function addStar1() {
+    const geometryS = new THREE.SphereGeometry(Math.random() + 0.3, 6, 6);
+    const materialS = new THREE.MeshBasicMaterial( { color: 0xffffff, opacity: 1.0, transparent: true });
+    const star = new THREE.Mesh( geometryS, materialS );
+    const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread( 300 ) );
+    star.position.set(0, 0, 0);
+    explodeAzimuth1.push(Math.random() * (Math.PI * 2));
+    explodePolar1.push(Math.random() * (Math.PI * 2));
+    stars1.push(star);
+    scene.add(star);
+  }
+  Array(150).fill().forEach(addStar1);
+
+
+
+  const stars2 = [];
+  const explodeAzimuth2 = [];
+  const explodePolar2 = [];
+  function addStar2() {
+    const geometryS = new THREE.SphereGeometry(Math.random() + 0.3, 6, 6);
+    const materialS = new THREE.MeshBasicMaterial( { color: 0xf38484, opacity: 1.0, transparent: true });
+    const star = new THREE.Mesh( geometryS, materialS );
+    const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread( 300 ) );
+    star.position.set(0, 0, 0);
+    explodeAzimuth2.push(Math.random() * (Math.PI * 2));
+    explodePolar2.push(Math.random() * (Math.PI * 2));
+    stars2.push(star);
+    scene.add(star);
+  }
+  Array(150).fill().forEach(addStar2);
+
+
+
+
+  const stars3 = [];
+  const explodeAzimuth3 = [];
+  const explodePolar3 = [];
+  function addStar3() {
+    const geometryS = new THREE.SphereGeometry(Math.random() + 0.6, 6, 6);
+    const materialS = new THREE.MeshBasicMaterial( { color: 0xffffff, opacity: 1.0, transparent: true });
+    const star = new THREE.Mesh( geometryS, materialS );
+    const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread( 300 ) );
+    star.position.set(0, 0, 0);
+    explodeAzimuth3.push(Math.random() * (Math.PI * 2));
+    explodePolar3.push(Math.random() * (Math.PI * 2));
+    stars3.push(star);
+    scene.add(star);
+  }
+  Array(50).fill().forEach(addStar3);
+
+
+
+
+  const stars4 = [];
+  const explodeAzimuth4 = [];
+  const explodePolar4 = [];
+  function addStar4() {
+    const geometryS = new THREE.SphereGeometry(Math.random() + 0.6, 6, 6);
+    const materialS = new THREE.MeshBasicMaterial( { color: 0x383838, opacity: 1.0, transparent: true });
+    const star = new THREE.Mesh( geometryS, materialS );
+    const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread( 300 ) );
+    star.position.set(0, 0, 0);
+    explodeAzimuth4.push(Math.random() * (Math.PI * 2));
+    explodePolar4.push(Math.random() * (Math.PI * 2));
+    stars4.push(star);
+    scene.add(star);
+  }
+  Array(50).fill().forEach(addStar4);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const newfoundTexture = new THREE.TextureLoader().load('./images/deep-ocean.jpg');
   scene.background = newfoundTexture;
@@ -420,17 +542,34 @@ button.addEventListener("click", () => {
     }
   });
 
+
+  const gcStartFade = 105;
+  const gcEndFade = 110;
+  const gcStartOutFade = 190;
+  const combStartFade = 190;
+  const combEndFade = 195;
+  const combStartOutFade = 250;
+
+
   const debugPosSensitivity = 0.30;
   const debugRotSensitivity = 0.01;
+  let scrollY = 0.0;
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////// ANIMATE ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   function animate() {
-    const scrollY = camera.position.distanceTo(centerPoint.position);
+    scrollY = camera.position.distanceTo(centerPoint.position);
 
-
-    // console.log("Pos: "+String(debugObject.position.x.toFixed(2))+", "+String(debugObject.position.y.toFixed(2))+", "+String(debugObject.position.z.toFixed(2)) + " ||| Rot: "+String(debugObject.rotation.x.toFixed(2))+", "+String(debugObject.rotation.y.toFixed(2))+", "+String(debugObject.rotation.z.toFixed(2)));
+    //debugObject.position.x,debugObject.position.y,debugObject.position.z
+//Pos: 45.30, 39.90, -42.90 ||| Rot: -0.72, 3.90, 0.23
+//Pos: 36.90, 11.40, 38.10 ||| Rot: -0.72, 3.90, 0.23
+//Pos: 63.30, 30.60, 9.90 ||| Rot: -0.72, 3.90, 0.23
+    makeExplosion(explodePolar1,explodeAzimuth1,stars1,180,230,0,0,0);
+    makeExplosion(explodePolar2,explodeAzimuth2,stars2,182,240,45.30,39.90,-42.90);
+    makeExplosion(explodePolar3,explodeAzimuth3,stars3,186,230,36.90,11.40,38.10);
+    makeExplosion(explodePolar4,explodeAzimuth4,stars4,184,230,63.30,30.60,9.90);
+    console.log("Pos: "+String(debugObject.position.x.toFixed(2))+", "+String(debugObject.position.y.toFixed(2))+", "+String(debugObject.position.z.toFixed(2)) + " ||| Rot: "+String(debugObject.rotation.x.toFixed(2))+", "+String(debugObject.rotation.y.toFixed(2))+", "+String(debugObject.rotation.z.toFixed(2)));
 
 
     gcactions.forEach(({ action, clip }) => {
@@ -460,12 +599,22 @@ button.addEventListener("click", () => {
 
     if (gcaModel) {
       if (scrollY < 180.0) {
+        scene.add(sigmaBond, piBond, oxygen, oxygen2, blankOxygen, blankOxygen2);
         gcaModel.position.set(linterpolate(scrollY,105,73.50,180,43.50), linterpolate(scrollY,105,-56.10,180,23.40), linterpolate(scrollY,105,-242.40,180,-21.00));
         gcaModel.rotation.set(linterpolate(scrollY,105,-0.72,180,-1.36), linterpolate(scrollY,105,3.90,180,2.83), linterpolate(scrollY,105,0.23,180,-0.18));
       } else if (scrollY > 180.0) {
+        scene.remove(sigmaBond, piBond, oxygen, oxygen2, blankOxygen, blankOxygen2);
         gcaModel.position.set(linterpolate(scrollY,180,43.50,285,13.50), linterpolate(scrollY,180,23.40,285,102.9), linterpolate(scrollY,180,-21.00,285,200.4));
         // gcaModel.rotation.set(linterpolate(scrollY,180,-1.36,255,-2.00), linterpolate(scrollY,180,2.83,255,1.76), linterpolate(scrollY,180,-0.18,255,-0.59));
       }
+      gcpanel.position.y = gcaModel.position.y + 60.0;
+      gcpanel.position.x = gcaModel.position.x;
+      gcpanel.position.z = gcaModel.position.z;
+      gcpanel.lookAt(camera.position);
+      combpanel.position.y = gcaModel.position.y + 0.0;
+      combpanel.position.x = gcaModel.position.x;
+      combpanel.position.z = gcaModel.position.z;
+      combpanel.lookAt(camera.position);
     }
 
 
@@ -509,29 +658,56 @@ button.addEventListener("click", () => {
     o2panel.lookAt(camera.position);
 
     ////////// MOVING BOND ENERGY PARTICLES  ////////////////
-    if ( scrollY > 27.1 && scrollY < 45.0) {
-      var i = 0;
-      stars.forEach((star) => {
-        star.material.opacity = (45.0 - scrollY) / (45.0 - 27.1);
-        // var explodeAzimuth = (i * 2.0 * Math.PI) / 50.0;
-        // var explodePolar = (Math.random() - 0.5) * (Math.PI / 4);
-        const explodeVector = createVectorFromAngles(explodePolar[i], explodeAzimuth[i]);
-        // const explodeVector = createVectorFromAngles(0.0, 0.0);
-        star.position.x = explodeVector.x * (scrollY - 27.1) * 10.0;
-        star.position.y = explodeVector.y * (scrollY - 27.1) * 10.0;
-        star.position.z = explodeVector.z * (scrollY - 27.1) * 10.0;
-        // star.position.addScaledVector(explodeVector, 1.0);
+    // makeExplosion(27.1,45.0,0,0,0);
 
-        i += 1;
-      });
-    } else {
-      stars.forEach((star) => {
-        star.material.opacity = 0.0;
-        star.position.x = 0.0;
-        star.position.y = 0.0;
-        star.position.z = 0.0;
-      });
-    }
+    // if ( scrollY > 27.1 && scrollY < 45.0) {
+    //   var i = 0;
+    //   stars.forEach((star) => {
+    //     star.material.opacity = (45.0 - scrollY) / (45.0 - 27.1);
+    //     const explodeVector = createVectorFromAngles(explodePolar[i], explodeAzimuth[i]);
+    //     star.position.x = explodeVector.x * (scrollY - 27.1) * 10.0;
+    //     star.position.y = explodeVector.y * (scrollY - 27.1) * 10.0;
+    //     star.position.z = explodeVector.z * (scrollY - 27.1) * 10.0;
+
+    //     i += 1;
+    //   });
+    // } else {
+    //   stars.forEach((star) => {
+    //     star.material.opacity = 0.0;
+    //     star.position.x = 0.0;
+    //     star.position.y = 0.0;
+    //     star.position.z = 0.0;
+    //   });
+    // }
+
+
+
+    makeExplosion(explodePolar,explodeAzimuth,stars,27.1,45.0,0,0,0);
+
+
+    // if ( scrollY > 27.1 && scrollY < 45.0) {
+    //   var i = 0;
+    //   stars.forEach((star) => {
+    //     star.material.opacity = (45.0 - scrollY) / (45.0 - 27.1);
+    //     // var explodeAzimuth = (i * 2.0 * Math.PI) / 50.0;
+    //     // var explodePolar = (Math.random() - 0.5) * (Math.PI / 4);
+    //     const explodeVector = createVectorFromAngles(explodePolar[i], explodeAzimuth[i]);
+    //     // const explodeVector = createVectorFromAngles(0.0, 0.0);
+    //     star.position.x = explodeVector.x * (scrollY - 27.1) * 10.0;
+    //     star.position.y = explodeVector.y * (scrollY - 27.1) * 10.0;
+    //     star.position.z = explodeVector.z * (scrollY - 27.1) * 10.0;
+    //     // star.position.addScaledVector(explodeVector, 1.0);
+
+    //     i += 1;
+    //   });
+    // } else {
+    //   stars.forEach((star) => {
+    //     star.material.opacity = 0.0;
+    //     star.position.x = 0.0;
+    //     star.position.y = 0.0;
+    //     star.position.z = 0.0;
+    //   });
+    // }
 
     
 
@@ -586,6 +762,13 @@ button.addEventListener("click", () => {
     o2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
     co2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
     h2opanel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
+
+    let gcfadeFactor = ((scrollY - gcStartFade) / (gcEndFade - gcStartFade));
+    gcfadeFactor = Math.min(Math.max(gcfadeFactor, 0), 1); // Clamp between 0 and 1
+    gcpanel.material.opacity = gcfadeFactor + Math.min(0.0, 0.1 * (gcStartOutFade - scrollY));
+    let combfadeFactor = ((scrollY - combStartFade) / (combEndFade - combStartFade));
+    combfadeFactor = Math.min(Math.max(combfadeFactor, 0), 0.85); // Clamp between 0 and 1
+    combpanel.material.opacity = combfadeFactor + Math.min(0.0, 0.1 * (combStartOutFade - scrollY));
 
 
 
