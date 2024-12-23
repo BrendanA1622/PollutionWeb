@@ -15,15 +15,29 @@ resetButton.id = "reset-button";
 resetButton.style.display = "none";
 document.body.appendChild(resetButton);
 const container = document.getElementById("scene-container");
+const scene = new THREE.Scene();
 
 let gcaModel;
 const debugObject = new THREE.Object3D();
 
-function setModelOpacity(model, opacity) {
+function setModelOpacity(model, opacity, wantOpaque) {
+  if (opacity < 0.01) {
+    scene.remove(model);
+  } else {
+    scene.add(model);
+  }
   model.traverse((child) => {
       if (child.isMesh && child.material) {
+        if (opacity < 0.98) {
           child.material.transparent = true; // Enable transparency
-          child.material.opacity = opacity; // Set opacity
+          child.material.opacity = opacity;
+        } else if (wantOpaque) {
+          child.material.transparent = false;
+          child.material.opacity = 1.0;
+        } else {
+          child.material.transparent = true; // Enable transparency
+          child.material.opacity = opacity;
+        }
       }
   });
 }
@@ -42,10 +56,9 @@ button.addEventListener("click", () => {
   const rng = seedrandom(seed);
   Math.random = rng;
   console.log(Math.random());
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1.0, 10000000 );
   camera.position.set(0,0,0);
-  const renderer = new THREE.WebGLRenderer({canvas: document.querySelector('#bg'),});
+  const renderer = new THREE.WebGLRenderer({canvas: document.querySelector('#bg'), logarithmicDepthBuffer: true});
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( window.innerWidth, window.innerHeight );
   camera.position.setZ(10);
@@ -74,7 +87,7 @@ button.addEventListener("click", () => {
       const action = mixer.clipAction(clip);
       gcactions.push({ action, clip });
     });
-    setModelOpacity(gcaModel, 0.0);
+    setModelOpacity(gcaModel, 0.0,true);
   });
 
   /////////////// Displaying Glucose Molecule Panel
@@ -361,6 +374,26 @@ button.addEventListener("click", () => {
 
 
 
+  let broughtInObject = [false,false,false,false,false];
+
+  function bringInObject(filename,fi1,fi2,fo1,fo2,x1,y1,z1,rx1,ry1,rz1,scale,broughtIndex) {
+    let broughtModel;
+    if (!broughtInObject[broughtIndex]) {
+      loader.load(filename, (gltf) => { 
+        broughtModel = gltf.scene;
+        scene.add(broughtModel);
+        broughtModel.position.set(x1, y1, z1);
+        broughtModel.rotation.set(rx1, ry1, rz1);
+        broughtModel.scale.set(scale, scale, scale);
+      });
+    }
+    broughtInObject[broughtIndex] = true;
+    if (broughtModel) {
+      setModelOpacity(broughtModel,0.5,true);
+    }
+    
+  }
+
 
 
 
@@ -413,13 +446,15 @@ button.addEventListener("click", () => {
   // window.addEventListener('resize', onWindowResize);
 
   // Smooth scroll variables
-  let scrollTargetY = controls.target.y; // Initial target Y
-  let currentTargetY = controls.target.y; // Current interpolated Y
+  let scrollTargetY = 15.0; // Initial target Y
+  let currentTargetY = 15.0; // Current interpolated Y
+  let zoomAmount = currentTargetY;
+  let scaled_zoom_speed = 1.0;
 
   function onScroll(event) {
     // Adjust the target based on scroll delta
     scrollTargetY += event.deltaY * 0.01; // Scale down the delta for smoother scrolling
-    scrollTargetY = Math.max(-1000, Math.min(1000, scrollTargetY)); // Clamp to a range
+    scrollTargetY = Math.max(15.0, Math.min(10000, scrollTargetY)); // Clamp to a range
   }
 
 
@@ -551,14 +586,77 @@ button.addEventListener("click", () => {
   const combStartOutFade = 250;
 
 
+  function linearScale(inputValue, inputMin, inputMax, outputMin, outputMax) {
+    // Prevent division by zero
+    if (inputMax - inputMin === 0) return outputMin;
+
+    return outputMin + ((inputValue - inputMin) / (inputMax - inputMin)) * (outputMax - outputMin);
+  }
+  function logarithmicScale(inputValue, inputMin, inputMax, outputMin, outputMax) {
+    // Prevent invalid ranges
+    if (inputValue <= 0 || inputMin <= 0 || inputMax <= 0) {
+        throw new Error("Input and range values for logarithmic scaling must be greater than 0.");
+    }
+    if (inputMax === inputMin) {
+        return outputMin; // Avoid division by zero
+    }
+
+    const logInputValue = Math.log(inputValue);
+    const logInputMin = Math.log(inputMin);
+    const logInputMax = Math.log(inputMax);
+
+    return outputMin + ((logInputValue - logInputMin) / (logInputMax - logInputMin)) * (outputMax - outputMin);
+  }
+  function exponentialScale(inputValue, inputMin, inputMax, outputMin, outputMax, exponent = 2) {
+    // Prevent invalid ranges
+    if (inputMax === inputMin) {
+        return outputMin; // Avoid division by zero
+    }
+
+    // Normalize input to a 0-1 range
+    let normalizedInput = (inputValue - inputMin) / (inputMax - inputMin);
+    normalizedInput = Math.max(0, Math.min(1, normalizedInput)); // Clamp to 0-1 for safety
+
+    // Apply exponential scaling
+    const scaledValue = outputMin + Math.pow(normalizedInput, exponent) * (outputMax - outputMin);
+
+    return scaledValue;
+  }
+
+
+
+
   const debugPosSensitivity = 0.30;
   const debugRotSensitivity = 0.01;
   let scrollY = 0.0;
+
+  
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////// ANIMATE ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   function animate() {
+    console.log("zoomAmount: " + zoomAmount);
+    currentTargetY += (scrollTargetY - currentTargetY) * 0.1;
+    // \left(1.1^{\left(x-0.82923\right)}\right)+15
+    if (currentTargetY < 25.49206) {
+      zoomAmount = -(currentTargetY);
+    } else {
+      zoomAmount = -(Math.pow(1.1,currentTargetY - 0.82923) + 15);
+    }
+    // zoomAmount = Math.max(-(Math.pow(1.5,currentTargetY) - 0.239920877), -(currentTargetY));
+    // zoomAmount = Math.min(-(currentTargetY), -(Math.pow(currentTargetY * 0.05, 4.0)));
+    // zoomAmount = Math.min(-(currentTargetY),-(exponentialScale(currentTargetY, 15.0, 300.0, 15.0, 50000.0,4.0)) * 1.0);
+    // zoomAmount = -(currentTargetY);
+    // let zoomFactor = Math.min(50.0, Math.pow(1.02, Math.abs(zoomAmount))); // Scales up speed
+    // zoomAmount *= 0.01 * zoomFactor;
+    const zoom_direction = new THREE.Vector3();
+    camera.getWorldDirection(zoom_direction);
+
+    // Update the camera position to move along its facing direction
+    // camera.position.addScaledVector(zoom_direction, (-scrollTargetY + currentTargetY) * 0.1 * (Math.log(scrollY + 1.0) - 2.0));
+    camera.position.copy(zoom_direction.clone().multiplyScalar(zoomAmount));
+
     scrollY = camera.position.distanceTo(centerPoint.position);
 
     //debugObject.position.x,debugObject.position.y,debugObject.position.z
@@ -569,7 +667,16 @@ button.addEventListener("click", () => {
     makeExplosion(explodePolar2,explodeAzimuth2,stars2,182,240,45.30,39.90,-42.90);
     makeExplosion(explodePolar3,explodeAzimuth3,stars3,186,230,36.90,11.40,38.10);
     makeExplosion(explodePolar4,explodeAzimuth4,stars4,184,230,63.30,30.60,9.90);
-    console.log("Pos: "+String(debugObject.position.x.toFixed(2))+", "+String(debugObject.position.y.toFixed(2))+", "+String(debugObject.position.z.toFixed(2)) + " ||| Rot: "+String(debugObject.rotation.x.toFixed(2))+", "+String(debugObject.rotation.y.toFixed(2))+", "+String(debugObject.rotation.z.toFixed(2)));
+
+    //********************************************************************************************************************************************** */
+    // console.log("Pos: "+String(debugObject.position.x.toFixed(2))+", "+String(debugObject.position.y.toFixed(2))+", "+String(debugObject.position.z.toFixed(2)) + " ||| Rot: "+String(debugObject.rotation.x.toFixed(2))+", "+String(debugObject.rotation.y.toFixed(2))+", "+String(debugObject.rotation.z.toFixed(2)));
+ 
+    bringInObject("./blenderModels/mitochondria.glb",250,255,350,355,0,-100000,0,0,0,0,520833.0,0);
+
+
+
+
+
 
 
     gcactions.forEach(({ action, clip }) => {
@@ -577,9 +684,10 @@ button.addEventListener("click", () => {
       action.play(); // Ensure the action is playing
     });
     if (gcaModel) {
-      setModelOpacity(gcaModel, Math.max(0.0,(scrollY - 105.0) * 0.03));
+      setModelOpacity(gcaModel, Math.max(0.0,(scrollY - 105.0) * 0.06),true);
       if (scrollY > 240) {
-        setModelOpacity(gcaModel, 1.0 - (scrollY - 240.0) * 0.06);
+        setModelOpacity(gcaModel, 1.0 - (scrollY - 240.0) * 0.06,true);
+
       }
     }
 
@@ -622,8 +730,6 @@ button.addEventListener("click", () => {
 
 
     requestAnimationFrame( animate );
-    
-    currentTargetY += (scrollTargetY - currentTargetY) * 0.1;
 
     model.position.set(h2o1Pos.position.x, h2o1Pos.position.y, h2o1Pos.position.z);
     model.rotation.set(h2o1Pos.rotation.x, h2o1Pos.rotation.y, h2o1Pos.rotation.z);
@@ -715,13 +821,6 @@ button.addEventListener("click", () => {
     // camera.position.y += (scrollTargetY - currentTargetY) * 0.1;
     // camera.position.z += (scrollTargetY - currentTargetY) * 0.1;
 
-    const zoom_direction = new THREE.Vector3();
-    camera.getWorldDirection(zoom_direction);
-
-    // Update the camera position to move along its facing direction
-    camera.position.addScaledVector(zoom_direction, (-scrollTargetY + currentTargetY) * 0.1 * (Math.log(scrollY + 1.0) - 2.0));
-
-
 
 
     
@@ -757,18 +856,26 @@ button.addEventListener("click", () => {
     let fadeFactor = ((scrollY - fadeStart) / (fadeEnd - fadeStart));
     fadeFactor = Math.min(Math.max(fadeFactor, 0), 1); // Clamp between 0 and 1
     // Apply opacity based on fade factor
-    oxygen.material.opacity = 1 - fadeFactor;
-    oxygen2.material.opacity = 1 - fadeFactor;
-    o2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
-    co2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
-    h2opanel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
+    // oxygen.material.opacity = 1 - fadeFactor;
+    setModelOpacity(oxygen,1 - fadeFactor,true);
+    // oxygen2.material.opacity = 1 - fadeFactor;
+    setModelOpacity(oxygen2,1 - fadeFactor,true);
+
+    // o2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
+    setModelOpacity(o2panel,fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY)),false);
+    // co2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
+    setModelOpacity(co2panel,fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY)),false);
+    // h2opanel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
+    setModelOpacity(h2opanel,fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY)),false);
 
     let gcfadeFactor = ((scrollY - gcStartFade) / (gcEndFade - gcStartFade));
     gcfadeFactor = Math.min(Math.max(gcfadeFactor, 0), 1); // Clamp between 0 and 1
-    gcpanel.material.opacity = gcfadeFactor + Math.min(0.0, 0.1 * (gcStartOutFade - scrollY));
+    // gcpanel.material.opacity = gcfadeFactor + Math.min(0.0, 0.1 * (gcStartOutFade - scrollY));
+    setModelOpacity(gcpanel,gcfadeFactor + Math.min(0.0, 0.1 * (gcStartOutFade - scrollY)),false);
     let combfadeFactor = ((scrollY - combStartFade) / (combEndFade - combStartFade));
     combfadeFactor = Math.min(Math.max(combfadeFactor, 0), 0.85); // Clamp between 0 and 1
-    combpanel.material.opacity = combfadeFactor + Math.min(0.0, 0.1 * (combStartOutFade - scrollY));
+    // combpanel.material.opacity = combfadeFactor + Math.min(0.0, 0.1 * (combStartOutFade - scrollY));
+    setModelOpacity(combpanel,combfadeFactor + Math.min(0.0, 0.1 * (combStartOutFade - scrollY)),false);
 
 
 
@@ -827,7 +934,7 @@ button.addEventListener("click", () => {
     // scale = 10.0 * Math.log(scrollY + 1.0);
 
     // rotationElement.innerText = `Screen height: ${scaleLabel}`;
-    rotationElement.innerText = `ScrollY: ${scrollY.toFixed(2)}`;
+    rotationElement.innerText = `currentTargetY: ${currentTargetY.toFixed(2)}`;
 
 
     controls.update();
