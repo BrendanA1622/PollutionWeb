@@ -5,6 +5,25 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { AnimationMixer } from 'three';
 
+
+let playedGcAnim = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
+let pgcaa1 = [];
+let pgcaa2 = [];
+let pgcaa3,pgcaa4,pgcaa5,pgcaa6,pgcaa7,pgcaa8,pgcaa9,pgcaa10,pgcaa11,pgcaa12,pgcaa13 = [];
+let pgcaActions = [pgcaa1,pgcaa2,pgcaa3,pgcaa4,pgcaa5,pgcaa6,pgcaa7,pgcaa8,pgcaa9,pgcaa10,pgcaa11,pgcaa12,pgcaa13];
+let pgcaa1m,pgcaa2m,pgcaa3m,pgcaa4m,pgcaa5m,pgcaa6m,pgcaa7m,pgcaa8m,pgcaa9m,pgcaa10m,pgcaa11m,pgcaa12m,pgcaa13m;
+let pgcaModels = [pgcaa1m,pgcaa2m,pgcaa3m,pgcaa4m,pgcaa5m,pgcaa6m,pgcaa7m,pgcaa8m,pgcaa9m,pgcaa10m,pgcaa11m,pgcaa12m,pgcaa13m];
+let pmixer1,pmixer2,pmixer3,pmixer4,pmixer5,pmixer6,pmixer7,pmixer8,pmixer9,pmixer10,pmixer11,pmixer12,pmixer13;
+let pgcaMixers = [pmixer1,pmixer2,pmixer3,pmixer4,pmixer5,pmixer6,pmixer7,pmixer8,pmixer9,pmixer10,pmixer11,pmixer12,pmixer13];
+const GCA_DELAY = 2400.0;
+
+
+
+
+
+
+
+let scrollY = 0.0;
 let mixer, animationAction;
 let gcactions = [];
 const clock = new THREE.Clock();
@@ -52,7 +71,7 @@ button.addEventListener("click", () => {
   canvas.id = "bg";
   container.appendChild(canvas);
 
-  const seed = 'verycool-seed';
+  const seed = 'random-gibberis'; // Locked in for glucose explosion!!!!
   const rng = seedrandom(seed);
   Math.random = rng;
   console.log(Math.random());
@@ -371,51 +390,90 @@ button.addEventListener("click", () => {
   Array(50).fill().forEach(addStar4);
 
 
+  // let firstTimeAddGlucoseExplosions = true;
+  // let agerandFirst = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  // let agerandSecond = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  // let agerandThird = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  // let agerandFourth = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  // let agerandFifth = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  // let agerandSixth = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  // let agerandSeventh = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+
+  // function addGlucoseExplosions(amount,reach) {
+    
+  //   let index = 0;
+  //   while (index < amount) {
+  //     if (firstTimeAddGlucoseExplosions) {
+  //       agerandFirst[index] = Math.random()+1.0;
+  //       agerandSecond[index] = Math.random()-0.5;
+  //       agerandThird[index] = Math.random()-0.5;
+  //       agerandFourth[index] = Math.random()-0.5;
+  //       agerandFifth[index] = Math.random()-0.5;
+  //       agerandSixth[index] = Math.random()-0.5;
+  //       agerandSeventh[index] = Math.random()-0.5;
+
+  //       firstTimeAddGlucoseExplosions = false;
+  //     }
+  //     playGlucoseAnimation(550 + (index * (agerandFirst[index]) * 100),(agerandSecond[index])*reach,(agerandThird[index])*reach,(agerandFourth[index])*reach,(agerandFifth[index])*(Math.PI * 4),(agerandSixth[index])*(Math.PI * 4),(agerandSeventh[index])*(Math.PI * 4),index);
+  //     index += 1;
+  //   }
+  // }
 
 
 
-  let broughtInObject = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
+
+
+
+
+  let broughtIn1m,broughtIn2m,broughtIn3m,broughtIn4m,broughtIn5m;
+  let broughtInModels = [broughtIn1m,broughtIn2m,broughtIn3m,broughtIn4m,broughtIn5m];
+
+  let broughtInObject = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
 
   function bringInObject(filename,fi1,fi2,fo1,fo2,x1,y1,z1,rx1,ry1,rz1,scale,broughtIndex) {
-    let broughtModel;
     if (!broughtInObject[broughtIndex]) {
       loader.load(filename, (gltf) => { 
-        broughtModel = gltf.scene;
-        scene.add(broughtModel);
-        broughtModel.position.set(x1, y1, z1);
-        broughtModel.rotation.set(rx1, ry1, rz1);
-        broughtModel.scale.set(scale, scale, scale);
+        broughtInModels[broughtIndex] = gltf.scene;
+        scene.add(broughtInModels[broughtIndex]);
+        broughtInModels[broughtIndex].position.set(x1, y1, z1);
+        broughtInModels[broughtIndex].rotation.set(rx1, ry1, rz1);
+        broughtInModels[broughtIndex].scale.set(scale, scale, scale);
       });
     }
     broughtInObject[broughtIndex] = true;
-    if (broughtModel) {
-      setModelOpacity(broughtModel,0.5,true); // Not done by any means, just opacity of 0.5 flat
+    if (broughtInModels[broughtIndex]) {
+      // setModelOpacity(broughtInModels[broughtIndex],0.0,true); // Not done by any means, just opacity of 0.5 flat
+      setModelOpacity(broughtInModels[broughtIndex],Math.min(Math.max(0.0,(currentTargetY-fi1) * 0.3),(fo1-currentTargetY) * 0.3), true); // Not done by any means, just opacity of 0.5 flat
     }
     
   }
 
-  let playedGcAnim = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
-  let pgcaa1 = [];
-  let pgcaa2 = [];
-  let pgcaa3,pgcaa4,pgcaa5,pgcaa6,pgcaa7,pgcaa8,pgcaa9,pgcaa10,pgcaa11,pgcaa12,pgcaa13 = [];
-  let pgcaActions = [pgcaa1,pgcaa2,pgcaa3,pgcaa4,pgcaa5,pgcaa6,pgcaa7,pgcaa8,pgcaa9,pgcaa10,pgcaa11,pgcaa12,pgcaa13];
-  let pgcaa1m,pgcaa2m,pgcaa3m,pgcaa4m,pgcaa5m,pgcaa6m,pgcaa7m,pgcaa8m,pgcaa9m,pgcaa10m,pgcaa11m,pgcaa12m,pgcaa13m;
-  let pgcaModels = [pgcaa1m,pgcaa2m,pgcaa3m,pgcaa4m,pgcaa5m,pgcaa6m,pgcaa7m,pgcaa8m,pgcaa9m,pgcaa10m,pgcaa11m,pgcaa12m,pgcaa13m];
-  const GCA_DELAY = 1300.0;
+  // let playedGcAnim = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
+  // let pgcaa1 = [];
+  // let pgcaa2 = [];
+  // let pgcaa3,pgcaa4,pgcaa5,pgcaa6,pgcaa7,pgcaa8,pgcaa9,pgcaa10,pgcaa11,pgcaa12,pgcaa13 = [];
+  // let pgcaActions = [pgcaa1,pgcaa2,pgcaa3,pgcaa4,pgcaa5,pgcaa6,pgcaa7,pgcaa8,pgcaa9,pgcaa10,pgcaa11,pgcaa12,pgcaa13];
+  // let pgcaa1m,pgcaa2m,pgcaa3m,pgcaa4m,pgcaa5m,pgcaa6m,pgcaa7m,pgcaa8m,pgcaa9m,pgcaa10m,pgcaa11m,pgcaa12m,pgcaa13m;
+  // let pgcaModels = [pgcaa1m,pgcaa2m,pgcaa3m,pgcaa4m,pgcaa5m,pgcaa6m,pgcaa7m,pgcaa8m,pgcaa9m,pgcaa10m,pgcaa11m,pgcaa12m,pgcaa13m];
+  // let pmixer1,pmixer2,pmixer3,pmixer4,pmixer5,pmixer6,pmixer7,pmixer8,pmixer9,pmixer10,pmixer11,pmixer12,pmixer13;
+  // let pgcaMixers = [pmixer1,pmixer2,pmixer3,pmixer4,pmixer5,pmixer6,pmixer7,pmixer8,pmixer9,pmixer10,pmixer11,pmixer12,pmixer13];
+  // const GCA_DELAY = 1300.0;
+
 
   function playGlucoseAnimation(startTime,x1,y1,z1,rx1,ry1,rz1,gcaIndex) {
     if (!playedGcAnim[gcaIndex]) {
       const tgcaloader = new GLTFLoader();
-      tgcaloader.load('./blenderModels/breakGlucoseAnim.glb', (gltf) => {
+      tgcaloader.load('./blenderModels/breakGlucoseAnim1.glb', (gltf) => {
         pgcaModels[gcaIndex] = gltf.scene;
         scene.add(pgcaModels[gcaIndex]);
         pgcaModels[gcaIndex].scale.set(5.9, 5.9, 5.9);
-        pgcaModels[gcaIndex].position.set(x1, y1, z1);
+        pgcaModels[gcaIndex].position.set((Math.random()-0.5) * 3000, (Math.random()-0.5) * 3000, (Math.random()-0.5) * 3000);
         pgcaModels[gcaIndex].rotation.set(rx1, ry1, rz1);
-        mixer = new THREE.AnimationMixer(gltf.scene);
+        pgcaMixers[gcaIndex] = new THREE.AnimationMixer(gltf.scene);
+        pgcaActions[gcaIndex] = [];
 
         gltf.animations.forEach((clip) => {
-          const action = mixer.clipAction(clip);
+          const action = pgcaMixers[gcaIndex].clipAction(clip);
           pgcaActions[gcaIndex].push({ action, clip });
         });
         setModelOpacity(pgcaModels[gcaIndex], 0.0,true);
@@ -423,15 +481,16 @@ button.addEventListener("click", () => {
     }
     playedGcAnim[gcaIndex] = true;
     if(pgcaModels[gcaIndex]) {
-      if(pgcaActions[gcaIndex]) {
-        pgcaActions[gcaIndex].forEach(({ action }) => {
-          action.time = Math.min(Math.max(0.0,(scrollY - startTime) * 0.01), 16.0); // Map scroll progress to animation time
-          action.play();
-        });
-      }
-      setModelOpacity(pgcaModels[gcaIndex], Math.min(1.0 - (scrollY - (startTime + GCA_DELAY)) * 0.01,Math.max(0.0,(scrollY - startTime) * 0.01),true));
+      pgcaActions[gcaIndex].forEach(({ action, clip }) => {
+        action.time = Math.min(Math.max(0.0,(scrollY - startTime) * 0.005), 16.0); // Map scroll progress to animation time
+        action.play(); // Ensure the action is playing
+      });
+      setModelOpacity(pgcaModels[gcaIndex], Math.min(1.0 - (scrollY - (startTime + GCA_DELAY)) * 0.001,Math.max(0.0,(scrollY - startTime) * 0.001),true));
+      // setModelOpacity(pgcaModels[gcaIndex], Math.min(1.0 - (scrollY - (startTime + GCA_DELAY)) * 0.01,Math.max(0.0,(scrollY - startTime) * 0.01),true));
+      // setModelOpacity(pgcaModels[gcaIndex], 1.0);
+      
     }
-    
+    if (pgcaMixers[gcaIndex]) pgcaMixers[gcaIndex].update(clock.getDelta());
   }
 
 
@@ -668,7 +727,6 @@ button.addEventListener("click", () => {
 
   const debugPosSensitivity = 0.30;
   const debugRotSensitivity = 0.01;
-  let scrollY = 0.0;
 
   
 
@@ -676,7 +734,7 @@ button.addEventListener("click", () => {
   ///////////////////////////////////////////// ANIMATE ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   function animate() {
-    console.log("zoomAmount: " + zoomAmount);
+    // console.log("zoomAmount: " + zoomAmount);
     currentTargetY += (scrollTargetY - currentTargetY) * 0.1;
     if (currentTargetY < 25.49206) {
       zoomAmount = -(currentTargetY);
@@ -698,12 +756,20 @@ button.addEventListener("click", () => {
     makeExplosion(explodePolar3,explodeAzimuth3,stars3,356,670,36.90,11.40,38.10);
     makeExplosion(explodePolar4,explodeAzimuth4,stars4,358,680,63.30,30.60,9.90);
 
-    playGlucoseAnimation(600,12,23,34,45,56,67,1);
+
+    playGlucoseAnimation(650,-877,564,672,82,74,1,0);
+    playGlucoseAnimation(900,807,164,-372,28,20,5,1);
+    playGlucoseAnimation(1250,-877,564,672,82,74,1,2);
+    playGlucoseAnimation(2500,807,164,-372,28,20,5,3);
+    playGlucoseAnimation(4500,-877,564,672,82,74,1,4);
+    playGlucoseAnimation(6000,807,164,-372,28,20,5,5);
+    
+
 
     //********************************************************************************************************************************************** */
     // console.log("Pos: "+String(debugObject.position.x.toFixed(2))+", "+String(debugObject.position.y.toFixed(2))+", "+String(debugObject.position.z.toFixed(2)) + " ||| Rot: "+String(debugObject.rotation.x.toFixed(2))+", "+String(debugObject.rotation.y.toFixed(2))+", "+String(debugObject.rotation.z.toFixed(2)));
  
-    bringInObject("./blenderModels/mitochondria.glb",250,255,350,355,0,-100000,0,0,0,0,520833.0,0);
+    bringInObject("./blenderModels/mitochondria.glb",117,1622,160,1622,-10000,-90000,15000,0,0,0,520833.0,0);
 
 
 
@@ -723,6 +789,9 @@ button.addEventListener("click", () => {
     }
 
     if (mixer) mixer.update(clock.getDelta());
+    pgcaMixers.forEach(genericMixer => {
+      if (genericMixer) genericMixer.update(clock.getDelta());
+    });
 
 
 
@@ -737,10 +806,6 @@ button.addEventListener("click", () => {
     debugObject.rotation.set(debugObject.rotation.x, debugObject.rotation.y, (Number(isBPressed) * debugRotSensitivity) - (Number(isGPressed) * debugRotSensitivity) + debugObject.rotation.z);
 
     if (gcaModel) {
-// _x: -1.3599383451716514
-// _y: 2.8301030791661455
-// _z: -0.17996050237558917
-      console.log(gcaModel.rotation);
       if (scrollY < 355.0) {
         scene.add(sigmaBond, piBond, oxygen, oxygen2, blankOxygen, blankOxygen2);
         gcaModel.position.set(linterpolate(scrollY,105,73.50,355,43.50), linterpolate(scrollY,105,-56.10,355,23.40), linterpolate(scrollY,105,-242.40,355,-21.00));
