@@ -52,7 +52,7 @@ button.addEventListener("click", () => {
   canvas.id = "bg";
   container.appendChild(canvas);
 
-  const seed = 'cool-seed';
+  const seed = 'verycool-seed';
   const rng = seedrandom(seed);
   Math.random = rng;
   console.log(Math.random());
@@ -92,14 +92,14 @@ button.addEventListener("click", () => {
 
   /////////////// Displaying Glucose Molecule Panel
   const gctexture = new THREE.TextureLoader().load('./images/GlucoseMoleculeDescriptor.png');
-  const gcgeometry = new THREE.PlaneGeometry(120, 28.805); // Adjust size as needed
+  const gcgeometry = new THREE.PlaneGeometry(180, 43.2075); // Adjust size as needed
   const gcmaterial = new THREE.MeshBasicMaterial({ map: gctexture, transparent: true, opacity: 0.0 });
   const gcpanel = new THREE.Mesh(gcgeometry, gcmaterial);
   scene.add(gcpanel);
 
   /////////////// Displaying Reaction Panel
   const combtexture = new THREE.TextureLoader().load('./images/CombustionReaction1.png');
-  const combgeometry = new THREE.PlaneGeometry(160, 120); // Adjust size as needed
+  const combgeometry = new THREE.PlaneGeometry(320, 240); // Adjust size as needed
   const combmaterial = new THREE.MeshBasicMaterial({ map: combtexture, transparent: true, opacity: 0.0 });
   const combpanel = new THREE.Mesh(combgeometry, combmaterial);
   scene.add(combpanel);
@@ -161,13 +161,13 @@ button.addEventListener("click", () => {
   const h2o1Pos = new THREE.Object3D();
   h2o1Pos.position.set(-100, 30, -60);
   h2o1Pos.rotation.set(Math.random() * (Math.PI * 2), Math.random() * (Math.PI * 2), Math.random() * (Math.PI * 2));
-  let model;
+  let h2omodel;
   loader.load('./blenderModels/water3.glb', (gltf) => { 
-    model = gltf.scene;
-    scene.add(model);
-    model.position.set(h2o1Pos.position.x, h2o1Pos.position.y, h2o1Pos.position.z);
-    model.rotation.set(h2o1Pos.rotation.x, h2o1Pos.rotation.y, h2o1Pos.rotation.z);
-    model.scale.set(5.9, 5.9, 5.9);
+    h2omodel = gltf.scene;
+    scene.add(h2omodel);
+    h2omodel.position.set(h2o1Pos.position.x, h2o1Pos.position.y, h2o1Pos.position.z);
+    h2omodel.rotation.set(h2o1Pos.rotation.x, h2o1Pos.rotation.y, h2o1Pos.rotation.z);
+    h2omodel.scale.set(5.9, 5.9, 5.9);
   }, undefined, (error) => {
       console.error('Error loading the model:', error);
   });
@@ -189,13 +189,13 @@ button.addEventListener("click", () => {
   const cd1Pos = new THREE.Object3D();
   cd1Pos.position.set(100, -60, -20);
   cd1Pos.rotation.set(Math.random() * (Math.PI * 2), Math.random() * (Math.PI * 2), Math.random() * (Math.PI * 2));
-  let model1;
+  let co2model;
   loader.load('./blenderModels/carbonDioxide.glb', (gltf) => { 
-    model1 = gltf.scene;
-    scene.add(model1);
-    model1.position.set(cd1Pos.position.x, cd1Pos.position.y, cd1Pos.position.z);
-    model1.rotation.set(cd1Pos.rotation.x, cd1Pos.rotation.y, cd1Pos.rotation.z);
-    model1.scale.set(5.9, 5.9, 5.9);
+    co2model = gltf.scene;
+    scene.add(co2model);
+    co2model.position.set(cd1Pos.position.x, cd1Pos.position.y, cd1Pos.position.z);
+    co2model.rotation.set(cd1Pos.rotation.x, cd1Pos.rotation.y, cd1Pos.rotation.z);
+    co2model.scale.set(5.9, 5.9, 5.9);
   }, undefined, (error) => {
       console.error('Error loading the model:', error);
   });
@@ -374,7 +374,7 @@ button.addEventListener("click", () => {
 
 
 
-  let broughtInObject = [false,false,false,false,false];
+  let broughtInObject = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
 
   function bringInObject(filename,fi1,fi2,fo1,fo2,x1,y1,z1,rx1,ry1,rz1,scale,broughtIndex) {
     let broughtModel;
@@ -389,7 +389,47 @@ button.addEventListener("click", () => {
     }
     broughtInObject[broughtIndex] = true;
     if (broughtModel) {
-      setModelOpacity(broughtModel,0.5,true);
+      setModelOpacity(broughtModel,0.5,true); // Not done by any means, just opacity of 0.5 flat
+    }
+    
+  }
+
+  let playedGcAnim = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
+  let pgcaa1 = [];
+  let pgcaa2 = [];
+  let pgcaa3,pgcaa4,pgcaa5,pgcaa6,pgcaa7,pgcaa8,pgcaa9,pgcaa10,pgcaa11,pgcaa12,pgcaa13 = [];
+  let pgcaActions = [pgcaa1,pgcaa2,pgcaa3,pgcaa4,pgcaa5,pgcaa6,pgcaa7,pgcaa8,pgcaa9,pgcaa10,pgcaa11,pgcaa12,pgcaa13];
+  let pgcaa1m,pgcaa2m,pgcaa3m,pgcaa4m,pgcaa5m,pgcaa6m,pgcaa7m,pgcaa8m,pgcaa9m,pgcaa10m,pgcaa11m,pgcaa12m,pgcaa13m;
+  let pgcaModels = [pgcaa1m,pgcaa2m,pgcaa3m,pgcaa4m,pgcaa5m,pgcaa6m,pgcaa7m,pgcaa8m,pgcaa9m,pgcaa10m,pgcaa11m,pgcaa12m,pgcaa13m];
+  const GCA_DELAY = 1300.0;
+
+  function playGlucoseAnimation(startTime,x1,y1,z1,rx1,ry1,rz1,gcaIndex) {
+    if (!playedGcAnim[gcaIndex]) {
+      const tgcaloader = new GLTFLoader();
+      tgcaloader.load('./blenderModels/breakGlucoseAnim.glb', (gltf) => {
+        pgcaModels[gcaIndex] = gltf.scene;
+        scene.add(pgcaModels[gcaIndex]);
+        pgcaModels[gcaIndex].scale.set(5.9, 5.9, 5.9);
+        pgcaModels[gcaIndex].position.set(x1, y1, z1);
+        pgcaModels[gcaIndex].rotation.set(rx1, ry1, rz1);
+        mixer = new THREE.AnimationMixer(gltf.scene);
+
+        gltf.animations.forEach((clip) => {
+          const action = mixer.clipAction(clip);
+          pgcaActions[gcaIndex].push({ action, clip });
+        });
+        setModelOpacity(pgcaModels[gcaIndex], 0.0,true);
+      });
+    }
+    playedGcAnim[gcaIndex] = true;
+    if(pgcaModels[gcaIndex]) {
+      if(pgcaActions[gcaIndex]) {
+        pgcaActions[gcaIndex].forEach(({ action }) => {
+          action.time = Math.min(Math.max(0.0,(scrollY - startTime) * 0.01), 16.0); // Map scroll progress to animation time
+          action.play();
+        });
+      }
+      setModelOpacity(pgcaModels[gcaIndex], Math.min(1.0 - (scrollY - (startTime + GCA_DELAY)) * 0.01,Math.max(0.0,(scrollY - startTime) * 0.01),true));
     }
     
   }
@@ -579,11 +619,11 @@ button.addEventListener("click", () => {
 
 
   const gcStartFade = 105;
-  const gcEndFade = 110;
-  const gcStartOutFade = 190;
-  const combStartFade = 190;
-  const combEndFade = 195;
-  const combStartOutFade = 250;
+  const gcEndFade = 150;
+  const gcStartOutFade = 450;
+  const combStartFade = 450;
+  const combEndFade = 490;
+  const combStartOutFade = 710;
 
 
   function linearScale(inputValue, inputMin, inputMax, outputMin, outputMax) {
@@ -638,23 +678,13 @@ button.addEventListener("click", () => {
   function animate() {
     console.log("zoomAmount: " + zoomAmount);
     currentTargetY += (scrollTargetY - currentTargetY) * 0.1;
-    // \left(1.1^{\left(x-0.82923\right)}\right)+15
     if (currentTargetY < 25.49206) {
       zoomAmount = -(currentTargetY);
     } else {
       zoomAmount = -(Math.pow(1.1,currentTargetY - 0.82923) + 15);
     }
-    // zoomAmount = Math.max(-(Math.pow(1.5,currentTargetY) - 0.239920877), -(currentTargetY));
-    // zoomAmount = Math.min(-(currentTargetY), -(Math.pow(currentTargetY * 0.05, 4.0)));
-    // zoomAmount = Math.min(-(currentTargetY),-(exponentialScale(currentTargetY, 15.0, 300.0, 15.0, 50000.0,4.0)) * 1.0);
-    // zoomAmount = -(currentTargetY);
-    // let zoomFactor = Math.min(50.0, Math.pow(1.02, Math.abs(zoomAmount))); // Scales up speed
-    // zoomAmount *= 0.01 * zoomFactor;
     const zoom_direction = new THREE.Vector3();
     camera.getWorldDirection(zoom_direction);
-
-    // Update the camera position to move along its facing direction
-    // camera.position.addScaledVector(zoom_direction, (-scrollTargetY + currentTargetY) * 0.1 * (Math.log(scrollY + 1.0) - 2.0));
     camera.position.copy(zoom_direction.clone().multiplyScalar(zoomAmount));
 
     scrollY = camera.position.distanceTo(centerPoint.position);
@@ -663,10 +693,12 @@ button.addEventListener("click", () => {
 //Pos: 45.30, 39.90, -42.90 ||| Rot: -0.72, 3.90, 0.23
 //Pos: 36.90, 11.40, 38.10 ||| Rot: -0.72, 3.90, 0.23
 //Pos: 63.30, 30.60, 9.90 ||| Rot: -0.72, 3.90, 0.23
-    makeExplosion(explodePolar1,explodeAzimuth1,stars1,180,230,0,0,0);
-    makeExplosion(explodePolar2,explodeAzimuth2,stars2,182,240,45.30,39.90,-42.90);
-    makeExplosion(explodePolar3,explodeAzimuth3,stars3,186,230,36.90,11.40,38.10);
-    makeExplosion(explodePolar4,explodeAzimuth4,stars4,184,230,63.30,30.60,9.90);
+    makeExplosion(explodePolar1,explodeAzimuth1,stars1,350,660,0,0,0);
+    makeExplosion(explodePolar2,explodeAzimuth2,stars2,353,650,45.30,39.90,-42.90);
+    makeExplosion(explodePolar3,explodeAzimuth3,stars3,356,670,36.90,11.40,38.10);
+    makeExplosion(explodePolar4,explodeAzimuth4,stars4,358,680,63.30,30.60,9.90);
+
+    playGlucoseAnimation(600,12,23,34,45,56,67,1);
 
     //********************************************************************************************************************************************** */
     // console.log("Pos: "+String(debugObject.position.x.toFixed(2))+", "+String(debugObject.position.y.toFixed(2))+", "+String(debugObject.position.z.toFixed(2)) + " ||| Rot: "+String(debugObject.rotation.x.toFixed(2))+", "+String(debugObject.rotation.y.toFixed(2))+", "+String(debugObject.rotation.z.toFixed(2)));
@@ -680,14 +712,13 @@ button.addEventListener("click", () => {
 
 
     gcactions.forEach(({ action, clip }) => {
-      action.time = Math.min(Math.max(0.0,(scrollY - 105.0) * 0.1), 16.0); // Map scroll progress to animation time
+      action.time = Math.min(Math.max(0.0,(scrollY - 105.0) * 0.03), 16.0); // Map scroll progress to animation time
       action.play(); // Ensure the action is playing
     });
     if (gcaModel) {
-      setModelOpacity(gcaModel, Math.max(0.0,(scrollY - 105.0) * 0.06),true);
+      setModelOpacity(gcaModel, Math.max(0.0,(scrollY - 105.0) * 0.03),true);
       if (scrollY > 240) {
-        setModelOpacity(gcaModel, 1.0 - (scrollY - 240.0) * 0.06,true);
-
+        setModelOpacity(gcaModel, 1.0 - (scrollY - 535.0) * 0.015,true);
       }
     }
 
@@ -706,13 +737,17 @@ button.addEventListener("click", () => {
     debugObject.rotation.set(debugObject.rotation.x, debugObject.rotation.y, (Number(isBPressed) * debugRotSensitivity) - (Number(isGPressed) * debugRotSensitivity) + debugObject.rotation.z);
 
     if (gcaModel) {
-      if (scrollY < 180.0) {
+// _x: -1.3599383451716514
+// _y: 2.8301030791661455
+// _z: -0.17996050237558917
+      console.log(gcaModel.rotation);
+      if (scrollY < 355.0) {
         scene.add(sigmaBond, piBond, oxygen, oxygen2, blankOxygen, blankOxygen2);
-        gcaModel.position.set(linterpolate(scrollY,105,73.50,180,43.50), linterpolate(scrollY,105,-56.10,180,23.40), linterpolate(scrollY,105,-242.40,180,-21.00));
-        gcaModel.rotation.set(linterpolate(scrollY,105,-0.72,180,-1.36), linterpolate(scrollY,105,3.90,180,2.83), linterpolate(scrollY,105,0.23,180,-0.18));
-      } else if (scrollY > 180.0) {
+        gcaModel.position.set(linterpolate(scrollY,105,73.50,355,43.50), linterpolate(scrollY,105,-56.10,355,23.40), linterpolate(scrollY,105,-242.40,355,-21.00));
+        gcaModel.rotation.set(linterpolate(scrollY,105,-0.72,355,-1.36), linterpolate(scrollY,105,3.90,355,2.83), linterpolate(scrollY,105,0.23,355,-0.18));
+      } else if (scrollY > 355.0) {
         scene.remove(sigmaBond, piBond, oxygen, oxygen2, blankOxygen, blankOxygen2);
-        gcaModel.position.set(linterpolate(scrollY,180,43.50,285,13.50), linterpolate(scrollY,180,23.40,285,102.9), linterpolate(scrollY,180,-21.00,285,200.4));
+        gcaModel.position.set(linterpolate(scrollY,355,43.50,650,13.50), linterpolate(scrollY,355,23.40,650,102.9), linterpolate(scrollY,355,-21.00,650,200.4));
         // gcaModel.rotation.set(linterpolate(scrollY,180,-1.36,255,-2.00), linterpolate(scrollY,180,2.83,255,1.76), linterpolate(scrollY,180,-0.18,255,-0.59));
       }
       gcpanel.position.y = gcaModel.position.y + 60.0;
@@ -731,8 +766,8 @@ button.addEventListener("click", () => {
 
     requestAnimationFrame( animate );
 
-    model.position.set(h2o1Pos.position.x, h2o1Pos.position.y, h2o1Pos.position.z);
-    model.rotation.set(h2o1Pos.rotation.x, h2o1Pos.rotation.y, h2o1Pos.rotation.z);
+    h2omodel.position.set(h2o1Pos.position.x, h2o1Pos.position.y, h2o1Pos.position.z);
+    h2omodel.rotation.set(h2o1Pos.rotation.x, h2o1Pos.rotation.y, h2o1Pos.rotation.z);
     h2o1Pos.position.set(-80.0 + scrollY * (1.1), 40.0 - scrollY * (1.1), -40.0 + scrollY * (0.3));
     h2o1Pos.rotation.set(-80.0 + scrollY * 0.2, 10.0, -10.0);
     
@@ -746,8 +781,8 @@ button.addEventListener("click", () => {
 
     cd1Pos.position.set(150.0 + scrollY * (-1.1), -80.0 + scrollY * (1.2), -50.0 + scrollY * (-0.3));
     cd1Pos.rotation.set(-10.0, 80.0 + scrollY * 0.2, -10.0);
-    model1.position.set(cd1Pos.position.x, cd1Pos.position.y, cd1Pos.position.z);
-    model1.rotation.set(cd1Pos.rotation.x, cd1Pos.rotation.y, cd1Pos.rotation.z);
+    co2model.position.set(cd1Pos.position.x, cd1Pos.position.y, cd1Pos.position.z);
+    co2model.rotation.set(cd1Pos.rotation.x, cd1Pos.rotation.y, cd1Pos.rotation.z);
 
     co2panel.position.y = cd1Pos.position.y + 12.0;
     co2panel.position.x = cd1Pos.position.x;
@@ -857,25 +892,28 @@ button.addEventListener("click", () => {
     fadeFactor = Math.min(Math.max(fadeFactor, 0), 1); // Clamp between 0 and 1
     // Apply opacity based on fade factor
     // oxygen.material.opacity = 1 - fadeFactor;
-    setModelOpacity(oxygen,1 - fadeFactor,true);
+    setModelOpacity(oxygen,1 - fadeFactor,false);
     // oxygen2.material.opacity = 1 - fadeFactor;
-    setModelOpacity(oxygen2,1 - fadeFactor,true);
+    setModelOpacity(oxygen2,1 - fadeFactor,false);
 
     // o2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
     setModelOpacity(o2panel,fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY)),false);
     // co2panel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
     setModelOpacity(co2panel,fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY)),false);
+    setModelOpacity(co2model,fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY)),true);
+
     // h2opanel.material.opacity = fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY));
     setModelOpacity(h2opanel,fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY)),false);
+    setModelOpacity(h2omodel,fadeFactor + Math.min(0.0, 0.1 * (startOutFade - scrollY)),true);
 
     let gcfadeFactor = ((scrollY - gcStartFade) / (gcEndFade - gcStartFade));
     gcfadeFactor = Math.min(Math.max(gcfadeFactor, 0), 1); // Clamp between 0 and 1
     // gcpanel.material.opacity = gcfadeFactor + Math.min(0.0, 0.1 * (gcStartOutFade - scrollY));
-    setModelOpacity(gcpanel,gcfadeFactor + Math.min(0.0, 0.1 * (gcStartOutFade - scrollY)),false);
+    setModelOpacity(gcpanel,gcfadeFactor + Math.min(0.0, 0.015 * (gcStartOutFade - scrollY)),false);
     let combfadeFactor = ((scrollY - combStartFade) / (combEndFade - combStartFade));
     combfadeFactor = Math.min(Math.max(combfadeFactor, 0), 0.85); // Clamp between 0 and 1
     // combpanel.material.opacity = combfadeFactor + Math.min(0.0, 0.1 * (combStartOutFade - scrollY));
-    setModelOpacity(combpanel,combfadeFactor + Math.min(0.0, 0.1 * (combStartOutFade - scrollY)),false);
+    setModelOpacity(combpanel,combfadeFactor + Math.min(0.0, 0.015 * (combStartOutFade - scrollY)),false);
 
 
 
