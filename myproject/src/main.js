@@ -5,6 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { AnimationMixer } from 'three';
 
+let GlobalScale = 1.0;
 
 let playedGcAnim = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
 let pgcaa1 = [];
@@ -75,15 +76,17 @@ button.addEventListener("click", () => {
   const rng = seedrandom(seed);
   Math.random = rng;
   console.log(Math.random());
-  const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1.0, 10000000 );
+  const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 10.0, 10000000000 );
   camera.position.set(0,0,0);
   const renderer = new THREE.WebGLRenderer({canvas: document.querySelector('#bg'), logarithmicDepthBuffer: true});
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( window.innerWidth, window.innerHeight );
   camera.position.setZ(10);
   renderer.render( scene, camera );
-
-
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  
 
   //////////////////////////////////////// GLUCOSE ANIMATION  ///////////////////////////////////
   const gcaloader = new GLTFLoader();
@@ -230,10 +233,18 @@ button.addEventListener("click", () => {
   scene.add(co2panel);
 
 
-
-
-
-
+  // //////////////////////////////////////// LOAD ATP SYNTHASE  ///////////////////////////////////
+  // const atpSynthase = new THREE.Object3D();
+  // atpSynthase.position.set(0, 0, 0);
+  // atpSynthase.rotation.set(0, 0, 0);
+  // let atpSynthaseModel;
+  // loader.load('./blenderModels/atpSynthaseColor.glb', (gltf) => { 
+  //   atpSynthaseModel = gltf.scene;
+  //   scene.add(atpSynthaseModel);
+  //   atpSynthaseModel.position.set(atpSynthase.position.x, atpSynthase.position.y, atpSynthase.position.z);
+  //   atpSynthaseModel.rotation.set(atpSynthase.rotation.x, atpSynthase.rotation.y, atpSynthase.rotation.z);
+  //   atpSynthaseModel.scale.set(5.9, 5.9, 5.9);
+  // });
 
 
 
@@ -430,7 +441,7 @@ button.addEventListener("click", () => {
 
   let broughtInObject = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
 
-  function bringInObject(filename,fi1,fi2,fo1,fo2,x1,y1,z1,rx1,ry1,rz1,scale,broughtIndex) {
+  function bringInObject(filename,fi1,fi2,fo1,fo2,x1,y1,z1,rx1,ry1,rz1,scale,broughtIndex,wantOpaque,maxOpacity) {
     if (!broughtInObject[broughtIndex]) {
       loader.load(filename, (gltf) => { 
         broughtInModels[broughtIndex] = gltf.scene;
@@ -438,12 +449,35 @@ button.addEventListener("click", () => {
         broughtInModels[broughtIndex].position.set(x1, y1, z1);
         broughtInModels[broughtIndex].rotation.set(rx1, ry1, rz1);
         broughtInModels[broughtIndex].scale.set(scale, scale, scale);
+        // gltf.scene.traverse((child) => {
+        //   if (child.isMesh && !child.material.map) {
+        //     child.material = new THREE.MeshStandardMaterial({
+        //       color: 0xff4444, // Fallback color
+        //     });
+        //   }
+        // });
       });
     }
     broughtInObject[broughtIndex] = true;
     if (broughtInModels[broughtIndex]) {
+      
+      // broughtInModels[broughtIndex].traverse((child) => {
+      //   if (child.isMesh) {
+      //     // Force material update
+      //     child.material.needsUpdate = true;
+
+      //     // Ensure textures are using the correct encoding
+      //     if (child.material.map) {
+      //       child.material.map.encoding = THREE.sRGBEncoding;
+      //     }
+
+      //     // Debug materials
+      //     // console.log('Material:', child.material);
+      //   }
+      // });
+      broughtInModels[broughtIndex].position.set(x1, y1, z1);
       // setModelOpacity(broughtInModels[broughtIndex],0.0,true); // Not done by any means, just opacity of 0.5 flat
-      setModelOpacity(broughtInModels[broughtIndex],Math.min(Math.max(0.0,(currentTargetY-fi1) * 0.3),(fo1-currentTargetY) * 0.3), true); // Not done by any means, just opacity of 0.5 flat
+      setModelOpacity(broughtInModels[broughtIndex],Math.min(Math.max(0.0,(currentTargetY-fi1) * 0.3),(fo1-currentTargetY) * 0.3,maxOpacity),wantOpaque); // Not done by any means, just opacity of 0.5 flat
     }
     
   }
@@ -467,7 +501,7 @@ button.addEventListener("click", () => {
         pgcaModels[gcaIndex] = gltf.scene;
         scene.add(pgcaModels[gcaIndex]);
         pgcaModels[gcaIndex].scale.set(5.9, 5.9, 5.9);
-        pgcaModels[gcaIndex].position.set((Math.random()-0.5) * 3000, (Math.random()-0.5) * 3000, (Math.random()-0.5) * 3000);
+        pgcaModels[gcaIndex].position.set(x1, y1, z1);
         pgcaModels[gcaIndex].rotation.set(rx1, ry1, rz1);
         pgcaMixers[gcaIndex] = new THREE.AnimationMixer(gltf.scene);
         pgcaActions[gcaIndex] = [];
@@ -757,19 +791,19 @@ button.addEventListener("click", () => {
     makeExplosion(explodePolar4,explodeAzimuth4,stars4,358,680,63.30,30.60,9.90);
 
 
-    playGlucoseAnimation(650,-877,564,672,82,74,1,0);
-    playGlucoseAnimation(900,807,164,-372,28,20,5,1);
-    playGlucoseAnimation(1250,-877,564,672,82,74,1,2);
-    playGlucoseAnimation(2500,807,164,-372,28,20,5,3);
-    playGlucoseAnimation(4500,-877,564,672,82,74,1,4);
-    playGlucoseAnimation(6000,807,164,-372,28,20,5,5);
+    playGlucoseAnimation(300,77,-350,-72,7,4,2,0);
+    playGlucoseAnimation(850,-450,164,-172,29,3,7,1);
+    playGlucoseAnimation(1300,660,350,560,23,34,3,2);
     
 
 
     //********************************************************************************************************************************************** */
     // console.log("Pos: "+String(debugObject.position.x.toFixed(2))+", "+String(debugObject.position.y.toFixed(2))+", "+String(debugObject.position.z.toFixed(2)) + " ||| Rot: "+String(debugObject.rotation.x.toFixed(2))+", "+String(debugObject.rotation.y.toFixed(2))+", "+String(debugObject.rotation.z.toFixed(2)));
  
-    bringInObject("./blenderModels/mitochondria.glb",117,1622,160,1622,-10000,-90000,15000,0,0,0,520833.0,0);
+    bringInObject("./blenderModels/mitochondria.glb",117,1622,160,1622,-10000,-90000,15000,0,0,0,520833.0,0,false,1.0);
+    bringInObject("./blenderModels/ribosome.glb",60,1622,80,1622,debugObject.position.x,debugObject.position.y,debugObject.position.z,0,0,0,1.0,1,false,0.97); // 137 times size of O atom
+    bringInObject("./blenderModels/human_cell.glb",150,1622,300,1622,0,0,0,0,0,0,1780822.0,2,true,1.0);
+    bringInObject("./blenderModels/realistic_human_heart.glb",20,1622,500,1622,0,0,0,0,0,0,6575342465,3,true,1.0);
 
 
 
@@ -1024,20 +1058,20 @@ button.addEventListener("click", () => {
     // Format the scale as a human-readable string
     let scaleLabel;
     if (scale < 1e-9) {
-        scaleLabel = `${(scale * 1e12).toFixed(2)} pm (picometers)`;
+        scaleLabel = `${(scale * 1e12).toFixed(4)} pm (picometers)`;
     } else if (scale < 1e-6) {
-        scaleLabel = `${(scale * 1e9).toFixed(2)} nm (nanometers)`;
+        scaleLabel = `${(scale * 1e9).toFixed(4)} nm (nanometers)`;
     } else if (scale < 1e-3) {
-        scaleLabel = `${(scale * 1e6).toFixed(2)} µm (micrometers)`;
+        scaleLabel = `${(scale * 1e6).toFixed(4)} µm (micrometers)`;
     } else {
-        scaleLabel = `${scale.toFixed(2)} m (meters)`;
+        scaleLabel = `${scale.toFixed(4)} m (meters)`;
     }
 
 
     // scale = 10.0 * Math.log(scrollY + 1.0);
 
-    // rotationElement.innerText = `Screen height: ${scaleLabel}`;
-    rotationElement.innerText = `currentTargetY: ${currentTargetY.toFixed(2)}`;
+    rotationElement.innerText = `Screen height: ${scaleLabel}`;
+    // rotationElement.innerText = `currentTargetY: ${currentTargetY.toFixed(2)}`;
 
 
     controls.update();
