@@ -76,7 +76,7 @@ button.addEventListener("click", () => {
   const rng = seedrandom(seed);
   Math.random = rng;
   console.log(Math.random());
-  const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 10.0, 10000000000 );
+  const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 3.0, 10000000000 );
   camera.position.set(0,0,0);
   const renderer = new THREE.WebGLRenderer({canvas: document.querySelector('#bg'), logarithmicDepthBuffer: true});
   renderer.setPixelRatio( window.devicePixelRatio );
